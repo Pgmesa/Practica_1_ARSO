@@ -1,6 +1,7 @@
 import subprocess
 import logging
 from os import remove, path
+from config import configVms, deleteBridgesConfig
  
 #------------------------ Command line functions -------------------------
 #-------------------------------------------------------------------------
@@ -20,11 +21,10 @@ def createVms(numServs=2):
     cmd_logger.info(" Creando maquinas virtuales...\n")
     createLoadBalancer()
     createServer(numServs)
-    # createBridges()
     # createClient()
-    # configVMs()
     if cmd_logger.level <= logging.INFO:
         subprocess.call(["lxc", "list","--fast"])
+    configVms()
 
 def createLoadBalancer():
     """Initializes the load balancer"""
@@ -163,4 +163,5 @@ def deleteVms():
         remove("register.txt")
     if cmd_logger.level <= logging.INFO:
         subprocess.call(["lxc", "list","--fast"])
+    deleteBridgesConfig() 
 # --------------------------------------------------------------------------
