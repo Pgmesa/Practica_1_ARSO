@@ -1,5 +1,6 @@
 from tools import isPositiveInt, numInBetween
 from bashCmds import createVms, startVms, stopVms, deleteVms, cmd_logger
+from config import config_logger
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -37,9 +38,11 @@ def processCmdline(args:list) -> list:
         return None
     if "-v" in args:
         cmd_logger.setLevel(20) # == logging.INFO
+        config_logger.setLevel(20)
         args.remove("-v")
     else:
         cmd_logger.setLevel(30) # == logging.WARNING
+        config_logger.setLevel(30)
     if len(args) == 1:
         order = args[0]
         valid_orders = ["crear", "arrancar", "parar", "destruir"]

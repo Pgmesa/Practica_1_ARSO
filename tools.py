@@ -4,6 +4,14 @@
 # Gathers a group of useful functions that may be used in other important
 # functions
 
+config_file = str("network:\n" +
+                  "    version: 2\n" + 
+                  "    ethernets:\n" + 
+                  "        eth0:\n" + 
+                  "            dhcp4: true\n" + 
+                  "        eth1:\n" + 
+                  "            dhcp4: true")
+
 def isPositiveInt (var) -> bool:
     """Checks if a variable is a positive integer"""
     try:
@@ -26,4 +34,4 @@ def numInBetween(num: int or float, Range:list or tuple) -> bool:
             return True
     return False
         
-    
+
