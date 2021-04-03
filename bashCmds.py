@@ -1,7 +1,7 @@
 import subprocess
 import logging
 from os import remove, path
-from config import configVms, deleteBridgesConfig
+from config import configVms, configBridges, deleteBridgesConfig
  
 #------------------------ Command line functions -------------------------
 #-------------------------------------------------------------------------
@@ -24,6 +24,7 @@ def createVms(numServs=2):
     # createClient()
     if cmd_logger.level <= logging.INFO:
         subprocess.call(["lxc", "list","--fast"])
+    configBridges()
     configVms()
 
 def createLoadBalancer():
@@ -31,7 +32,7 @@ def createLoadBalancer():
     cmd_logger.info(" Creando el balanceador de carga...")
     procExit = subprocess.call(["lxc", "init", "ubuntu1804", "lb", "-q"])
     if procExit == 0:
-        cmd_logger.info(" EL balanceador de carga 'lb' ha sido creado con exito\n")
+        cmd_logger.info(" El balanceador de carga 'lb' ha sido creado con exito\n")
     else:
         cmd_logger.error(" Ha habido algun problema creando el balanceador de carga 'lb'\n")
  
