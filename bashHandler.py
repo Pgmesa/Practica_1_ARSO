@@ -8,6 +8,8 @@ from config import config_logger
 # and interpreted. The bashCmd module is not coupled with this one, they are
 # independent.
 
+logLvl = 0
+
 class cmdLineError(Exception):
     def __init__(self, msg:str):
         hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
@@ -30,19 +32,18 @@ def execute(args:list):
 
 def processCmdline(args:list) -> list:
     """Checks if the arguments passed through the console are correct for this program.
-    Executes the optional arguments found and returns the args filtered without them.
-    If -h is found None is returned to indicate that nothing should be done outside this function"""
+        Executes the optional arguments found and returns the args filtered without them. If -h is 
+            found None is returned to indicate that nothing should be done outside this function"""
+    global logLvl
     args.pop(0)
     if "-h" in args:
         printHelp()
         return None
-    if "-v" in args:
-        cmd_logger.setLevel(20) # == logging.INFO
-        config_logger.setLevel(20)
-        args.remove("-v")
-    else:
-        cmd_logger.setLevel(30) # == logging.WARNING
-        config_logger.setLevel(30)
+    if "-d" in args: args.remove("-d"); logLvl = 10 # == logging.DEBUG
+    elif "-v" in args: args.remove("-v"); logLvl = 20 # == logging.INFO
+    else: logLvl = 30 # == logging.WARNING
+    configLogers()
+    
     if len(args) == 1:
         order = args[0]
         valid_orders = ["crear", "arrancar", "parar", "destruir"]
@@ -67,6 +68,11 @@ def processCmdline(args:list) -> list:
         msg = f" El numero de argumentos introducido en el programa es incorrecto"
         raise cmdLineError(msg)
 
+def configLogers():
+    global logLvl
+    cmd_logger.setLevel(logLvl)
+    config_logger.setLevel(logLvl)
+
 def printHelp():
     """Shows information in console about the parameters that pfinal1.py admits"""
     print()
@@ -74,7 +80,8 @@ def printHelp():
     print(" + pyhton3 pfinal1.py <orden> :")
     print("     -> crear <void or integer between(1-5)> -->" + 
                         " creates and configures the number of servers especified\n " +
-                        "          (if void, 2 servers are created). It also initializes a load balancer.")
+                        "          (if void, 2 servers are created). It also initializes a load balancer" + 
+                        " and connects all vms with bridges")
     print("     -> arrancar --> runs all the virtual machines already created")
     print("     -> parar --> stops the virtual machines currently running")
     print("     -> destruir --> deletes every virtual machine created and all connections betweeen them")

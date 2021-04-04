@@ -2,7 +2,7 @@
 # --------------------------------TOOLS--------------------------------
 # ---------------------------------------------------------------------
 # Gathers a group of useful functions that may be used in other important
-# functions
+# functions or in debugging.
 
 config_file = str("network:\n" +
                   "    version: 2\n" + 
@@ -11,6 +11,11 @@ config_file = str("network:\n" +
                   "            dhcp4: true\n" + 
                   "        eth1:\n" + 
                   "            dhcp4: true")
+
+def create_yaml():
+    """Creates a file with the 'configuration_file' info"""
+    with open("50-cloud-init.yaml", "w") as file:
+        file.write(config_file)
 
 def isPositiveInt (var) -> bool:
     """Checks if a variable is a positive integer"""
@@ -33,5 +38,3 @@ def numInBetween(num: int or float, Range:list or tuple) -> bool:
         if num > Range[0] and num < Range[1]:
             return True
     return False
-        
-

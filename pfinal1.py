@@ -13,7 +13,6 @@ main_logger = logging.getLogger(__name__)
 
 def main():
     args = sys.argv
-    main_logger.setLevel(logging.INFO if "-v" in args else logging.WARNING)
     try:
         args_processed = bash.processCmdline(args)
     except cmdLineError as clErr:
@@ -21,6 +20,7 @@ def main():
     else:
         if args_processed == None:
             return
+        main_logger.setLevel(bash.logLvl)
         main_logger.info(" Programa iniciado")
         bash.execute(args_processed)
         main_logger.info(" Programa finalizado")

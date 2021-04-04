@@ -23,7 +23,7 @@ def createVms(numServs=2):
     createServer(numServs)
     # createClient()
     if cmd_logger.level <= logging.INFO:
-        subprocess.call(["lxc", "list","--fast"])
+        subprocess.call(["lxc", "list"])
     configBridges()
     configVms()
 
@@ -59,11 +59,14 @@ def createServer(numServs:int):
 def startVms():
     """Runs the Vms (lb and servers) initialized by createVMs(). 
             The server names created are logged in the register.txt file"""
+    if not path.isfile("register.txt"):
+        cmd_logger.warning(" No existen maquinas virtuales creadas por el programa")
+        return
     cmd_logger.info(" Arrancando maquinas virtuales...\n")
     cmd_logger.info(" Arrancando el balanceador de carga..." )        
     procExit = subprocess.call(["lxc", "start", "lb"])
     if procExit == 0:
-        cmd_logger.info(f" EL balanceador de carga 'lb' ha sido arrancado correctamente\n")
+        cmd_logger.info(f" El balanceador de carga 'lb' ha sido arrancado correctamente\n")
         subprocess.Popen([
                             "xterm","-fa", "monaco", "-fs", "13", "-bg", "black",
                             "-fg", "green", "-e", f"lxc exec lb bash"
@@ -72,12 +75,9 @@ def startVms():
         cmd_logger.error(f" Ha habido algun problema arrancando el balanceador de carga 'lb' \n")     
              
     cmd_logger.info(" Arrancando servidores...")
-    if not path.isfile("register.txt"):
-        cmd_logger.warning(" No existen servidores creados por el programa")
-        return
     rg = open("register.txt", "r")
     VMs = rg.read().split("\n") # same as [vm.strip() for vm in rg.readlines()]
-    cmd_logger.debug(f"{VMs} \n")
+    cmd_logger.debug(f" Servidores que arrancar: {VMs}")
     for vm in VMs:
         procExit = subprocess.call(["lxc", "start", vm])
         if procExit == 0:
@@ -90,7 +90,12 @@ def startVms():
             cmd_logger.error(f" Ha habido algun problema arrancando el servidor '{vm}'")
     rg.close()
     if cmd_logger.level <= logging.INFO:
-        subprocess.call(["lxc", "list","--fast"]) 
+        salida = ""
+        while not salida.count(".") == 3*(len(VMs)+2):
+            out = subprocess.Popen(["lxc", "list"], stdout=subprocess.PIPE) 
+            salida = out.communicate()[0].decode()
+            salida = salida[:-1] # Eliminamos el ultimo salto de linea
+        print(salida)
 # --------------------------------------------------------------------------
 
 # ------------------------------ cmd parar ------------------------------
@@ -98,21 +103,21 @@ def startVms():
 def stopVms():
     """Stops the VMs (lb and servers) runned by startVMs()
             (Reads from register.txt which servers have been runned)"""
+    if not path.isfile("register.txt"):
+        cmd_logger.warning(" No existen maquinas virtuales creadas por el programa")
+        return
     cmd_logger.info(" Deteniendo maquinas virtuales...\n")
     cmd_logger.info(" Deteniendo el balanceador de carga..." )        
     procExit = subprocess.call(["lxc", "stop", "lb"])
     if procExit == 0:
-        cmd_logger.info(f" EL balanceador de carga 'lb' ha sido detenido correctamente\n")
+        cmd_logger.info(f" El balanceador de carga 'lb' ha sido detenido correctamente\n")
     else:
         cmd_logger.error(f" Ha habido algun problema deteniendo el balanceador de carga 'lb'\n") 
         
     cmd_logger.info(" Deteniendo servidores...")
-    if not path.isfile("register.txt"):
-        cmd_logger.warning(" No existen servidores creados por el programa")
-        return
     rg = open("register.txt", "r")
     VMs = rg.read().split("\n") # same as [vm.strip() for vm in rg.readlines()]
-    cmd_logger.debug(f"{VMs} \n")
+    cmd_logger.debug(f" Servidores que detener: {VMs}")
     for vm in VMs:
         procExit = subprocess.call(["lxc", "stop", vm])
         if procExit == 0:
@@ -121,7 +126,7 @@ def stopVms():
             cmd_logger.error(f" Ha habido algun problema deteniendo el servidor '{vm}'")
     rg.close()
     if cmd_logger.level <= logging.INFO:
-        subprocess.call(["lxc", "list","--fast"])
+        subprocess.call(["lxc", "list"])
 # -----------------------------------------------------------------------
 
 # ------------------------------ cmd destruir ------------------------------
@@ -129,6 +134,9 @@ def stopVms():
 def deleteVms():
     """Deletes all virtual machine created if they are in a STOPPED state.
             (Reads from register.txt which servers have been created) and deletes them"""
+    if not path.isfile("register.txt"):
+        cmd_logger.warning(" No existen maquinas virtuales creadas por el programa")
+        return
     cmd_logger.info(" Eliminando maquinas virtuales...\n")
     cmd_logger.info(" Eliminando balanceador de carga...")
     procExit = subprocess.call(["lxc", "delete","lb"])
@@ -138,12 +146,9 @@ def deleteVms():
         cmd_logger.error(f" Ha habido algun problema eliminando el balanceador de carga 'lb'\n")
     
     cmd_logger.info(" Eliminando servidores...")
-    if not path.isfile("register.txt"):
-        cmd_logger.warning(" No existen servidores creados por el programa")
-        return
     rg = open("register.txt", "r")
     VMs = rg.read().split("\n") # same as [vm.strip() for vm in rg.readlines()]
-    cmd_logger.debug(f"{VMs} \n")
+    cmd_logger.debug(f" Servidores que destruir: {VMs}")
     failures = []
     for vm in VMs:
         procExit = subprocess.call(["lxc", "delete", vm])
@@ -163,6 +168,6 @@ def deleteVms():
     else:
         remove("register.txt")
     if cmd_logger.level <= logging.INFO:
-        subprocess.call(["lxc", "list","--fast"])
+        subprocess.call(["lxc", "list"])
     deleteBridgesConfig() 
 # --------------------------------------------------------------------------
