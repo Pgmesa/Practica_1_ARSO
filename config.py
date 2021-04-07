@@ -29,7 +29,7 @@ def configVms():
     Vms = rg.read().split("\n") # same as [vm.strip() for vm in rg.readlines()]
     config_logger.debug(f" Servidores que configurar: {Vms}")
     for server in Vms:
-        ipv4_address = f"10.0.0.{3 + Vms.index(server)}"
+        ipv4_address = f"10.0.0.{2 + Vms.index(server)}"
         config_logger.info(f" Configurando servidor '{server}'...")
         procExit = subprocess.call(["lxc", "network", "attach", "lxdbr0", server, "eth0"])
         if procExit == 0: 
