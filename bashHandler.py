@@ -1,6 +1,5 @@
-from tools import isPositiveInt, numInBetween
-from bashCmds import createVms, startVms, stopVms, deleteVms, cmd_logger
-from config import config_logger
+from bashCmds import createVms, startVms, stopVms, deleteVms
+from CLInterface import Cli
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -8,87 +7,35 @@ from config import config_logger
 # and interpreted. The bashCmd module is not coupled with this one, they are
 # independent.
 
-logLvl = 0
-
-class cmdLineError(Exception):
-    def __init__(self, msg:str):
-        hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
-        super().__init__(msg + hlpm)
-
 def execute(args:list):
     """Executes the command line order 'crear', 'arrancar', 'parar' or 'destruir'"""
     order = args[0]
     if order == "crear":
-        if len(args) == 1:
-            createVms()
-        else:
-            createVms(numServs=args[1])
+        createVms(args[1])
     elif order == "arrancar":
         startVms()
     elif order == "parar":
         stopVms()
     elif order == "destruir":
         deleteVms()
-
-def processCmdline(args:list) -> list:
-    """Checks if the arguments passed through the console are correct for this program.
-        Executes the optional arguments found and returns the args filtered without them. If -h is 
-            found None is returned to indicate that nothing should be done outside this function"""
-    global logLvl
-    args.pop(0)
-    if "-h" in args:
-        printHelp()
-        return None
-    if "-d" in args: args.remove("-d"); logLvl = 10 # == logging.DEBUG
-    elif "-v" in args: args.remove("-v"); logLvl = 20 # == logging.INFO
-    else: logLvl = 30 # == logging.WARNING
-    configLogers()
     
-    if len(args) == 1:
-        order = args[0]
-        valid_orders = ["crear", "arrancar", "parar", "destruir"]
-        if order in valid_orders:
-            return args
-        else:
-            msg = f" La orden '{order}' no es valida (ordenes validas: crear, arrancar, parar, destruir)"
-            raise cmdLineError(msg)
-    elif len(args) == 2:
-        order = args[0]
-        if order == "crear":
-            if isPositiveInt(args[1]) and numInBetween(int(args[1]), [1,5]):
-                args[1] = int(args[1])
-                return args
-            else:
-                msg = f" El parametro '{args[1]}' no es valido, debe ser un entero positivo entre (1-5)"
-                raise cmdLineError(msg)
-        else:
-            msg = f" La orden '{order}' no admite el parametro '{args[1]}'"
-            raise cmdLineError(msg)
-    else:
-        msg = f" El numero de argumentos introducido en el programa es incorrecto"
-        raise cmdLineError(msg)
-
-def configLogers():
-    global logLvl
-    cmd_logger.setLevel(logLvl)
-    config_logger.setLevel(logLvl)
-
-def printHelp():
-    """Shows information in console about the parameters that pfinal1.py admits"""
-    print()
-    print(" -- HELP --")
-    print(" + pyhton3 pfinal1.py <orden> :")
-    print("     -> crear <void or integer between(1-5)> -->" + 
-                        " creates and configures the number of servers especified\n " +
-                        "          (if void, 2 servers are created). It also initializes a load balancer" + 
-                        " and connects all vms with bridges")
-    print("     -> arrancar --> runs all the virtual machines already created")
-    print("     -> parar --> stops the virtual machines currently running")
-    print("     -> destruir --> deletes every virtual machine created and all connections betweeen them")
-    print()
-    print("     + Optional arguments: ")
-    print("         -> -h --> help: shows the commands and optional arguments" +
-                                " that this program can recieve")
-    print("         -> -v --> verbosity: shows information about every process" +
-                                " that is being executed")
-    print()
+def configCli() -> Cli:
+    cli = Cli()
+    # Arguments
+    msg = ("<void or integer between(1-5)> --> " + 
+            " creates and configures the number of servers especified\n " +
+            "          (if void, 2 servers are created). It also initializes a load balancer" + 
+            " and connects all vms with bridges")
+    cli.addArg("crear", description=msg, choices=[1,2,3,4,5], default=2)
+    msg = "runs all the virtual machines already created"
+    cli.addArg("arrancar", description=msg)
+    msg = "stops the virtual machines currently running"
+    cli.addArg("parar", description=msg)
+    msg = "deletes every virtual machine created and all connections betweeen them"
+    cli.addArg("destruir", description=msg)
+    
+    #Options
+    msg = "shows information about every process that is being executed"
+    cli.addOption("-v", ["-d"], description=msg)
+    cli.addOption("-d", ["-v"])
+    return cli

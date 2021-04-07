@@ -1,11 +1,11 @@
 import subprocess
 import logging
-from tools import config_file
 from os import remove
 from time import sleep
 
 logging.basicConfig(level=logging.NOTSET)
 config_logger = logging.getLogger(__name__)   
+     
         
 def configVms():
     """Configures the IPV4 of the virtual machines and attaches them
@@ -88,7 +88,15 @@ def deleteBridgesConfig():
         subprocess.call(["lxc", "network","list"])
 
 def config_lb_netfile():
+    global config_file
     """Replace the configuration file of the load balancer with a new one"""
+    config_file = str("network:\n" +
+                  "    version: 2\n" + 
+                  "    ethernets:\n" + 
+                  "        eth0:\n" + 
+                  "            dhcp4: true\n" + 
+                  "        eth1:\n" + 
+                  "            dhcp4: true") 
     config_logger.info(" Configurando net del balanceador de carga...")
     with open("50-cloud-init.yaml", "w") as file:
         file.write(config_file)
