@@ -6,17 +6,17 @@ from config import configVms, configBridges, deleteBridgesConfig
 #------------------------ Command line functions -------------------------
 #-------------------------------------------------------------------------
 # This file contains custom bash functions for configuring virtual machines
-
 logging.basicConfig(level=logging.NOTSET)
 cmd_logger = logging.getLogger(__name__)
+
 # ------------------------------ cmd crear ------------------------------
 # -----------------------------------------------------------------------
-def createVms(numServs=2):
+def createVms(numServs:int):
     """Creates the num of servers specified and the load balancer,
             if they have not been initialized yet"""       
     if path.isfile("register.txt"):
         cmd_logger.warning(" Las maquinas virtuales ya han sido inicializadas," +
-                                " se deben destruir las anteriores para crear otras nuevas")
+                                " se deben destruir \nlas anteriores para crear otras nuevas")
         return
     cmd_logger.info(" Creando maquinas virtuales...\n")
     createLoadBalancer()
