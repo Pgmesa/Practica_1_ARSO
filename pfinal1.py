@@ -2,7 +2,7 @@
 import sys
 import logging
 import bashHandler as bash
-from CLInterface import cmdLineError
+from cli import CmdLineError
 from config import config_logger
 from bashCmds import cmd_logger
 
@@ -18,7 +18,7 @@ def main():
     args = sys.argv
     try:
         args_processed = cli.processCmdline(args)
-    except cmdLineError as clErr:
+    except CmdLineError as clErr:
         main_logger.error(f" {clErr}")
     else:
         if args_processed == None: return
