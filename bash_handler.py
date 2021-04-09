@@ -1,5 +1,5 @@
-from bashCmds import createVms, startVms, stopVms, deleteVms
-from cli import Cli
+from vms.controllers import createVms, startVms, stopVms, deleteVms
+from cli.cli import Cli
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -8,7 +8,7 @@ from cli import Cli
 # independent.
 
 def execute(args:list):
-    """Executes the command line order 'crear', 'arrancar', 'parar' or 'destruir'"""
+    """Executes the commands of the program'"""
     order = args[0]
     if order == "crear":
         createVms(args[1])

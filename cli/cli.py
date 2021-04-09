@@ -1,4 +1,5 @@
 from functools import reduce
+from cli.aux_classes import Option, Argument, CmdLineError
 # ------- Command Line Interface
 class Cli:
     def __init__(self):
@@ -23,11 +24,12 @@ class Cli:
         if "-h" in inArgs: 
             self.printHelp()
             return None
+
         inOpts = []
         # Miramos a ver si alguna de las opciones validas esta en la linea de comandos introducida
-        for i in range(len(inArgs)):
+        for arg in inArgs:
             for validOpt in self.options:
-                if inArgs[i] == validOpt.name:
+                if arg == validOpt.name:
                     if len(inOpts) > 0:
                         # Comprobamos que son opciones compatibles
                         for opt in inOpts:
@@ -35,8 +37,8 @@ class Cli:
                                 errmsg = f"Las opciones '{opt}' y '{validOpt}' no son compatibles"
                                 raise CmdLineError(errmsg)
                     inOpts.append(validOpt)
-        # Eliminamos las opciones ya procesadas de la linea de comandos
-        for opt in inOpts: inArgs.remove(opt.name)     
+        # Eliminamos las opciones ya procesadas de la linea de comandos  
+        for opt in inOpts: inArgs.remove(opt.name)
         # Guardamos los nombres de las opciones en vez del objeto Option entero (ya no nos hace falta)
         inOpts = list(map(lambda opt: str(opt), inOpts))
 
@@ -70,41 +72,16 @@ class Cli:
         raise CmdLineError(f"El comando '{inArgs[0]}' no se reconoce")
     
     def printHelp(self):
-        print(" python3 __main__ [commands] <options>")
+        print(" python3 __main__ [commands] <options/flags>")
         print(" + Commands: ")
         for arg in self.arguments:
             print(f"    -> {arg.name} --> {arg.description}")
-        print(" + Options: ")   
+        print(" + Options/Flags: ")   
         for opt in self.options:
             if not opt.description == None:
                 print(f"    -> {opt.name} --> {opt.description}")
             else:
                 print(f"    -> {opt.name}")
 
-class CmdLineError(Exception):
-    def __init__(self, msg:str):
-        hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
-        super().__init__(msg + hlpm)
 
-class Argument:
-    def __init__(self, name:str, extraArg:any=False,
-                    choices:list=None, default:any=None, description:str=None):
-        self.name = name
-        self.extraArg = extraArg
-        self.choices = choices
-        self.default = default
-        self.description = description 
-    
-    def __str__(self) -> str:
-        return self.name 
-    
-class Option:
-    def __init__(self, option:str, 
-                    notCompatibleWith:list=[], description:str=None):
-        self.name = option
-        self.ncw = notCompatibleWith + [self.name]
-        self.description = description
-        
-    def __str__(self) -> str:
-        return self.name 
         

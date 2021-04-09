@@ -1,10 +1,10 @@
 # Integrantes del grupo: Pablo García Mesa, Fernando Fernandez Martín, Santiago González Gómez 
 import sys
 import logging
-import bashHandler as bash
-from cli import CmdLineError
-from config import config_logger
-from bashCmds import cmd_logger
+import bash_handler as bash
+from cli.aux_classes import CmdLineError
+from vms.config import config_logger
+from vms.controllers import ctrl_logger
 
 logging.basicConfig(level=logging.NOTSET)
 main_logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def configLogers(args:list):
     else:
         logLvl = logging.WARNING
     main_logger.setLevel(logLvl)
-    cmd_logger.setLevel(logLvl)
+    ctrl_logger.setLevel(logLvl)
     config_logger.setLevel(logLvl)
         
 if __name__ == "__main__":
