@@ -1,5 +1,6 @@
-from vms.controllers import createVms, startVms, stopVms, deleteVms
+from vms.controllers import initVms, startVms, stopVms, deleteVms
 from cli.cli import Cli
+from vms.vm import VirtualMachine
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -11,7 +12,8 @@ def execute(args:list):
     """Executes the commands of the program'"""
     order = args[0]
     if order == "crear":
-        createVms(args[1])
+        vms = serializeVms(numServs=args[1])
+        initVms(vms)
     elif order == "arrancar":
         startVms()
     elif order == "parar":
@@ -22,6 +24,17 @@ def execute(args:list):
         print(args)
     elif order == "eliminar":
         print(args)
+        
+def serializeVms(numServs) -> list:
+    vms = []
+    image = "ubuntu1804"
+    for i in range(numServs): 
+        vms.append(VirtualMachine(f"s{i+1}", image, tag="server"))
+    lb = VirtualMachine("lb", image, tag="load balancer")
+    vms.append(lb)
+    # client = VirtualMachine("client", image, tag="client")
+    # vms.append(client)
+    return vms
     
 def configCli() -> Cli:
     cli = Cli()

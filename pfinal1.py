@@ -1,4 +1,4 @@
-# Integrantes del grupo: Pablo García Mesa, Fernando Fernandez Martín, Santiago González Gómez 
+# Integrantes del grupo: Pablo García Mesa, Santiago González Gómez, Fernando Fernández Martín
 import sys
 import logging
 import bash_handler as bash
