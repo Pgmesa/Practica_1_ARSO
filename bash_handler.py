@@ -4,6 +4,7 @@ from cli.cli import Cli
 from vms.vm import VirtualMachine
 from bridges.bridge import Bridge
 from os import path
+import logging
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -57,10 +58,10 @@ def serializeVms(numServs) -> list:
     image = "ubuntu1804"
     for i in range(numServs): 
         vms.append(VirtualMachine(f"s{i+1}", image, tag=SERVER))
-    # lb = VirtualMachine("lb", image, tag=LB)
-    # vms.append(lb)
-    client = VirtualMachine("client", image, tag=CLIENT)
-    vms.append(client)
+    lb = VirtualMachine("lb", image, tag=LB)
+    vms.append(lb)
+    # client = VirtualMachine("client", image, tag=CLIENT)
+    # vms.append(client)
     return vms
 
 def serializeBridges(numBridges) -> dict:
@@ -76,6 +77,18 @@ def serializeBridges(numBridges) -> dict:
         )
         bridges[b_name] = b
     return bridges
+
+def applyOptionalArgs(args:list):
+    if "-d" in args:
+        logLvl = logging.DEBUG
+        args.remove("-d")
+    elif "-v" in args:
+        logLvl = logging.INFO
+        args.remove("-v")
+    else:
+        logLvl = logging.WARNING
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logLvl) 
 
 def configCli() -> Cli:
     cli = Cli()
