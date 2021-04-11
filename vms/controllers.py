@@ -1,15 +1,17 @@
-import subprocess
 import logging
-from os import remove, path
-from vms.vm import VirtualMachine, LxcError
-from pickle import dump, load
+import subprocess
 from time import sleep
+from os import remove, path
 from functools import reduce
+from pickle import dump, load
+from contextlib import suppress
+
+from vms.vm import VirtualMachine, LxcError
 
 #------------------------ Command line functions -------------------------
 #-------------------------------------------------------------------------
 # This file contains custom bash functions for configuring virtual machines
-logging.basicConfig(level=logging.NOTSET)
+root_logger = logging.getLogger()
 ctrl_logger = logging.getLogger(__name__)
 
 def update_vms_register(vms:list):
@@ -20,7 +22,7 @@ def load_vms() -> list:
     with open("vms_register", "rb") as file:
         return load(file)
 
-def update_vm(vm_to_update):
+def update_vm(vm_to_update:VirtualMachine):
     vms = load_vms()
     index = None
     for i, vm in enumerate(vms):
@@ -43,7 +45,7 @@ def initVms(vms:list):
     """Creates the num of   servers specified and the load balancer,
             if they have not been initialized yet"""       
     if path.isfile("vms_register"):
-        ctrl_logger.warning(" Maquinas virtuales ya inicializadas, " +
+        ctrl_logger.error(" Maquinas virtuales ya inicializadas, " +
                                 "se deben destruir las anteriores para crear otras nuevas")
         return 
     ctrl_logger.info(" Inicializando maquinas virtuales...\n")
@@ -60,7 +62,7 @@ def initVms(vms:list):
          
     update_vms_register(successful)
    
-    if ctrl_logger.level <= logging.INFO:
+    if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
     
 # -----------------------------------------------------------------------
@@ -87,7 +89,7 @@ def startVms():
 
     update_vms_register(vms)
 
-    if ctrl_logger.level <= logging.INFO:
+    if root_logger.level <= logging.WARNING:
         ips = reduce(lambda acum, vm: acum+len(vm.networks), vms, 0)
         salida = ""
         while not salida.count(".") == 3*ips:
@@ -119,7 +121,7 @@ def stopVms():
 
     update_vms_register(vms)
     
-    if ctrl_logger.level <= logging.INFO:
+    if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
 # -----------------------------------------------------------------------
 
@@ -129,7 +131,7 @@ def deleteVms():
     """Deletes all virtual machine created if they are in a STOPPED state.
             (Reads from register.txt which servers have been created) and deletes them"""
     if not path.isfile("vms_register"):
-        ctrl_logger.warning(" No existen maquinas virtuales creadas por el programa")
+        ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return
     ctrl_logger.info(" Eliminando maquinas virtuales...\n")
     
@@ -137,6 +139,8 @@ def deleteVms():
     
     failures = []
     for vm in vms:
+        with suppress(LxcError):
+            vm.stop()
         try:
             ctrl_logger.info(f" Eliminando {vm.tag} '{vm.name}'...")
             vm.delete()
@@ -150,7 +154,7 @@ def deleteVms():
     else:
         remove("vms_register")
         
-    if ctrl_logger.level <= logging.INFO:
+    if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
 # --------------------------------------------------------------------------
 
@@ -166,7 +170,7 @@ def connect(vm:VirtualMachine, with_ip:str, to_network:str):
     update_vm(vm)
 
 
-def configure_netfile(vm):
+def configure_netfile(vm:VirtualMachine):
     """Replace the configuration file with a new one"""
     networks = vm.networks
     if len(networks) == 1 and list(networks.keys())[0] == "eth0": return

@@ -1,24 +1,24 @@
-from bridges.bridge import Bridge, LxcNetworkError
-from vms.vm import VirtualMachine
-from pickle import dump, load
-from os import remove, path
 import logging
 import subprocess
+from os import remove, path
+from pickle import dump, load
 
-logging.basicConfig(level=logging.NOTSET)
-ctrl_logger = logging.getLogger(__name__)
+from bridges.bridge import Bridge, LxcNetworkError
 
 # -----------------------------------------------
+root_logger = logging.getLogger()
+ctrl_logger = logging.getLogger(__name__)
+
 def load_bridges() -> list:
     with open("bridges_register", "rb") as file:
         bridges = load(file)
     return bridges
 
-def update_bridges_register(bridges):
+def update_bridges_register(bridges:list):
     with open("bridges_register", "wb") as file:
         dump(bridges, file)
 
-def update_bridge(bridge_to_update):
+def update_bridge(bridge_to_update:Bridge):
     bridges = load_bridges()
     index = None
     for i, b in enumerate(bridges):
@@ -37,7 +37,7 @@ def load_bridge(name:str) -> Bridge:
 
 def initBridges(bridges:list):
     if path.isfile("bridges_register"):
-        ctrl_logger.warning(" Los bridges ya han sido creados, " +
+        ctrl_logger.error(" Los bridges ya han sido creados, " +
                                 "se deben destruir los anteriores para crear otros nuevos")
         return
     ctrl_logger.info(" Creando bridges...\n")
@@ -54,12 +54,12 @@ def initBridges(bridges:list):
          
     update_bridges_register(successful)
     
-    if ctrl_logger.level <= logging.INFO:
+    if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "network", "list"])
 
 def deleteBridges():
     if not path.isfile("bridges_register"):
-        ctrl_logger.warning(" No existen bridges creadas por el programa")
+        ctrl_logger.error(" No existen bridges creadas por el programa")
         return
     
     ctrl_logger.info(" Eliminando bridges...\n")
@@ -81,15 +81,15 @@ def deleteBridges():
     else:
         remove("bridges_register")
         
-    if ctrl_logger.level <= logging.INFO:
+    if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "network", "list"])
 
-def attach(vm:VirtualMachine, to_bridge:Bridge):
+def attach(vm_name:str, to_bridge:Bridge):
     bridge = to_bridge
-    ctrl_logger.info(f" Agregando {vm.tag} '{vm.name}' al bridge {bridge.name}...")
+    ctrl_logger.info(f" Agregando '{vm_name}' al bridge {bridge.name}...")
     try:
-        bridge.add_vm(vm)
-        ctrl_logger.info(f" {vm.tag} '{vm.name}' agregado con exito")
+        bridge.add_vm(vm_name)
+        ctrl_logger.info(f" '{vm_name}' agregado con exito")
     except LxcNetworkError as err:
         ctrl_logger.error(err)
     update_bridge(bridge)

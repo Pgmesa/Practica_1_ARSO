@@ -2,6 +2,7 @@
 import sys
 import logging
 import bash_handler as bash
+
 from cli.aux_classes import CmdLineError
 
 logging.basicConfig(level=logging.NOTSET)
@@ -20,7 +21,7 @@ def main():
         main_logger.error(f" {clErr}")
     else:
         if args_processed == None: return
-        bash.applyOptionalArgs(args_processed)
+        bash.applyVerbosity(args_processed)
         main_logger.info(" Programa iniciado")
         bash.execute(args_processed)
         main_logger.info(" Programa finalizado")  

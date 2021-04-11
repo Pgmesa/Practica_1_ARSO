@@ -1,4 +1,5 @@
 from functools import reduce
+
 from cli.aux_classes import Option, Argument, CmdLineError
 
 # ------- Command Line Interface

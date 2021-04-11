@@ -1,10 +1,11 @@
-import vms.controllers as vms_handler
-import bridges.controllers as bridges_handler
+import logging
+from os import path
+
 from cli.cli import Cli
 from vms.vm import VirtualMachine
 from bridges.bridge import Bridge
-from os import path
-import logging
+import vms.controllers as vms_handler
+import bridges.controllers as bridges_handler
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -31,6 +32,12 @@ def execute(args:list):
     elif order == "parar":
         vms_handler.stopVms()
     elif order == "destruir":
+        if not "-f" in args:
+            print("Se borraran las maquinas virtuales, bridges" + 
+                                    " y sus conexiones aun podiendo estar arrancadas")
+            response = str(input("¿Estas seguro?(y/n): "))
+            if response.lower() != "y":
+                return
         vms_handler.deleteVms()
         bridges_handler.deleteBridges()
     elif order == "añadir":
@@ -47,7 +54,7 @@ def connect_machines(vms:list, bridges:dict):
         else:
             bridges_to_connect = [bridges["lxdbr1"]]   
         for b in bridges_to_connect:
-            bridges_handler.attach(vm, to_bridge=b)
+            bridges_handler.attach(vm.name, to_bridge=b)
             vms_handler.connect(vm, with_ip=f"{b.ipv4_addr[:-4]}{i+2}", to_network=b.ethernet)
         vms_handler.configure_netfile(vm)
         
@@ -78,13 +85,16 @@ def serializeBridges(numBridges) -> dict:
         bridges[b_name] = b
     return bridges
 
-def applyOptionalArgs(args:list):
+def applyVerbosity(args:list):
     if "-d" in args:
         logLvl = logging.DEBUG
         args.remove("-d")
     elif "-v" in args:
         logLvl = logging.INFO
         args.remove("-v")
+    elif "-q" in args:
+        logLvl = logging.ERROR
+        args.remove("-q")
     else:
         logLvl = logging.WARNING
     root_logger = logging.getLogger()
@@ -105,7 +115,7 @@ def configCli() -> Cli:
     msg = "deletes every virtual machine created and all connections betweeen them"
     cli.addArg("destruir", description=msg)
     # Other functionalities
-    msg = "<integer between(1-5)> adds the number of servers specified (it can't surpass 5 servers)"
+    msg = "<integer between(1-4)> adds the number of servers specified (the program can't surpass 5 servers)"
     cli.addArg("añadir", description=msg, extraArg=True, choices=[1,2,3,4])
     msg = "<name of the server> deletes the server specified"
     cli.addArg("eliminar", description=msg, extraArg=True)
@@ -115,4 +125,8 @@ def configCli() -> Cli:
     cli.addOption("-v", notCompatibleWith=["-d"], description=msg)
     msg = "option for debugging"
     cli.addOption("-d", notCompatibleWith=["-v"], description=msg)
+    msg = "'quiet mode', doesn't show any msg during execution (only when an error occurs)"
+    cli.addOption("-q", notCompatibleWith=["-v","-d"], description=msg)
+    msg = "executes the action without asking confirmation"
+    cli.addOption("-f", description=msg)
     return cli

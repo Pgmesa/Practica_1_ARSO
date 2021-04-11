@@ -31,7 +31,7 @@ class VirtualMachine:
             raise LxcError(errmsg)
         self.networks[eth] = with_ip
     
-    def execute_order(self, order:str, final_state):
+    def execute_order(self, order:str, final_state:str):
         cmd = ["lxc", order, self.container_image, self.name]
         if order != "init":
             cmd.pop(2)

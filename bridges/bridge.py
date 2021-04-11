@@ -1,5 +1,6 @@
-from vms.vm import VirtualMachine
 import subprocess
+
+from vms.vm import VirtualMachine
 
 class LxcNetworkError(Exception):
     pass
@@ -37,17 +38,17 @@ class Bridge:
         self.ethernet = ethernet
         self.used_by = []
     
-    def add_vm(self, vm):
+    def add_vm(self, vm_name:str):
         process = subprocess.Popen([
             "lxc", "network", "attach",
-            self.name, vm.name, self.ethernet
+            self.name, vm_name, self.ethernet
         ])
         outcome = process.wait()
         if outcome != 0:
             errmsg = process.stderr.read().decode()[6:]
             raise LxcNetworkError(errmsg)
         else:
-            self.used_by.append(vm.name)
+            self.used_by.append(vm_name)
     
     def create(self):
         if not self.is_default:
