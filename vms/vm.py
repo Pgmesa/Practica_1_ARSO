@@ -12,12 +12,25 @@ class LxcError(Exception):
     pass
 
 class VirtualMachine:
+    
     def __init__(self, name:str, container_image:str, tag:str=""):
         self.name = name
         self.container_image = container_image
         self.state = NOT_INIT
         self.tag = tag
+        self.networks = {}
         
+    def add_to_network(self, eth:str, with_ip:str):
+        process = subprocess.Popen([
+            "lxc","config","device","set", self.name,
+            eth,"ipv4.address", with_ip
+        ])
+        outcome = process.wait()
+        if outcome != 0:
+            errmsg = process.stderr.read().decode().strip()[6:]
+            raise LxcError(errmsg)
+        self.networks[eth] = with_ip
+    
     def execute_order(self, order:str, final_state):
         cmd = ["lxc", order, self.container_image, self.name]
         if order != "init":
@@ -73,3 +86,12 @@ class VirtualMachine:
     def launch(self):
         self.init()
         self.start()
+    
+    def __str__(self):
+        string = (
+            f"Name: {self.name} -->\n" + 
+            f"Tag: {self.tag}, State: {self.state}\n" +
+            f"container_image: {self.container_image}\n" +
+            f"networks: {self.networks}"
+            )
+        return string

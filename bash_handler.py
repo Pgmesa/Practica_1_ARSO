@@ -1,6 +1,9 @@
-from vms.controllers import initVms, startVms, stopVms, deleteVms
+import vms.controllers as vms_handler
+import bridges.controllers as bridges_handler
 from cli.cli import Cli
 from vms.vm import VirtualMachine
+from bridges.bridge import Bridge
+from os import path
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -8,34 +11,72 @@ from vms.vm import VirtualMachine
 # and interpreted. The bashCmd module is not coupled with this one, they are
 # independent.
 
+# Tags of the Machines available in this program
+SERVER = "server"
+LB = "load balancer"
+CLIENT  = "client"
+
 def execute(args:list):
     """Executes the commands of the program'"""
     order = args[0]
     if order == "crear":
         vms = serializeVms(numServs=args[1])
-        initVms(vms)
+        vms_handler.initVms(vms)
+        bridges = serializeBridges(numBridges=2)
+        bridges_handler.initBridges(bridges.values())
+        connect_machines(vms=vms, bridges=bridges)
     elif order == "arrancar":
-        startVms()
+        vms_handler.startVms()
     elif order == "parar":
-        stopVms()
+        vms_handler.stopVms()
     elif order == "destruir":
-        deleteVms()
+        vms_handler.deleteVms()
+        bridges_handler.deleteBridges()
     elif order == "añadir":
         print(args)
     elif order == "eliminar":
         print(args)
+  
+def connect_machines(vms:list, bridges:dict):
+    for i, vm in enumerate(vms):
+        if vm.tag == SERVER:
+            bridges_to_connect = [bridges["lxdbr0"]]
+        elif vm.tag == LB:
+            bridges_to_connect = [bridges["lxdbr0"], bridges["lxdbr1"]]
+        else:
+            bridges_to_connect = [bridges["lxdbr1"]]   
+        for b in bridges_to_connect:
+            bridges_handler.attach(vm, to_bridge=b)
+            vms_handler.connect(vm, with_ip=f"{b.ipv4_addr[:-4]}{i+2}", to_network=b.ethernet)
+        vms_handler.configure_netfile(vm)
         
 def serializeVms(numServs) -> list:
+    if path.isfile("vms_register"):
+        return []
     vms = []
     image = "ubuntu1804"
     for i in range(numServs): 
-        vms.append(VirtualMachine(f"s{i+1}", image, tag="server"))
-    lb = VirtualMachine("lb", image, tag="load balancer")
-    vms.append(lb)
-    # client = VirtualMachine("client", image, tag="client")
-    # vms.append(client)
+        vms.append(VirtualMachine(f"s{i+1}", image, tag=SERVER))
+    # lb = VirtualMachine("lb", image, tag=LB)
+    # vms.append(lb)
+    client = VirtualMachine("client", image, tag=CLIENT)
+    vms.append(client)
     return vms
-    
+
+def serializeBridges(numBridges) -> dict:
+    if path.isfile("bridges_register"):
+        return {}
+    bridges = {}
+    for i in range(numBridges):
+        b_name = f"lxdbr{i}"
+        b = Bridge(
+            b_name, 
+            ethernet=f"eth{i}",
+            ipv4_nat=True, ipv4_addr=f"10.0.{i}.1/24"
+        )
+        bridges[b_name] = b
+    return bridges
+
 def configCli() -> Cli:
     cli = Cli()
     # Arguments
