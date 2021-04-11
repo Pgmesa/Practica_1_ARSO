@@ -1,10 +1,10 @@
-# Integrantes del grupo: Pablo García Mesa, Fernando Fernandez Martín, Santiago González Gómez 
+# Integrantes del grupo: Pablo García Mesa, Santiago González Gómez, Fernando Fernández Martín
 import sys
 import logging
 import bash_handler as bash
 from cli.aux_classes import CmdLineError
-from vms.config import config_logger
-from vms.controllers import ctrl_logger
+from vms.controllers import ctrl_logger as vm_logger
+from bridges.controllers import ctrl_logger as br_logger
 
 logging.basicConfig(level=logging.NOTSET)
 main_logger = logging.getLogger(__name__)
@@ -35,8 +35,8 @@ def configLogers(args:list):
     else:
         logLvl = logging.WARNING
     main_logger.setLevel(logLvl)
-    ctrl_logger.setLevel(logLvl)
-    config_logger.setLevel(logLvl)
+    vm_logger.setLevel(logLvl)
+    br_logger.setLevel(logLvl)
         
 if __name__ == "__main__":
     main()
