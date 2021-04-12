@@ -10,9 +10,11 @@ root_logger = logging.getLogger()
 ctrl_logger = logging.getLogger(__name__)
 
 def load_bridges() -> list:
-    with open("bridges_register", "rb") as file:
-        bridges = load(file)
-    return bridges
+    try:
+        with open("bridges_register", "rb") as file:
+            return load(file)
+    except FileNotFoundError:
+        return None
 
 def update_bridges_register(bridges:list):
     with open("bridges_register", "wb") as file:

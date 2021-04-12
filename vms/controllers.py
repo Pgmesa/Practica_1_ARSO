@@ -19,8 +19,11 @@ def update_vms_register(vms:list):
         dump(vms, file)
         
 def load_vms() -> list:
-    with open("vms_register", "rb") as file:
-        return load(file)
+    try:
+        with open("vms_register", "rb") as file:
+            return load(file)
+    except FileNotFoundError:
+        return None
 
 def update_vm(vm_to_update:VirtualMachine):
     vms = load_vms()

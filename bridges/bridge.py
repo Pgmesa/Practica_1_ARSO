@@ -76,11 +76,5 @@ class Bridge:
             subprocess.call(["lxc", "network", "set", self.name, "ipv4.address", "none"])
         
     def __str__(self):
-        string = (
-            "----------------"
-            f"Name: {self.name} -->\n" + 
-            f"Ethernet: {self.ethernet}, ipv4: {self.ipv4_addr}\n" +
-            f"Used_by: {self.used_by}"
-            )
-        return string
+        return self.name
     

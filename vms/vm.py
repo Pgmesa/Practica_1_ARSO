@@ -88,10 +88,4 @@ class VirtualMachine:
         self.start()
     
     def __str__(self):
-        string = (
-            f"Name: {self.name} -->\n" + 
-            f"Tag: {self.tag}, State: {self.state}\n" +
-            f"container_image: {self.container_image}\n" +
-            f"networks: {self.networks}"
-            )
-        return string
+        return self.name

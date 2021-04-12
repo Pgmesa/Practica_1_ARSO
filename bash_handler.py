@@ -1,9 +1,12 @@
 import logging
+import subprocess
 from os import path
+from contextlib import suppress
 
 from cli.cli import Cli
 from vms.vm import VirtualMachine
 from bridges.bridge import Bridge
+from tools import printProgramState
 import vms.controllers as vms_handler
 import bridges.controllers as bridges_handler
 
@@ -44,7 +47,15 @@ def execute(args:list):
         print(args)
     elif order == "eliminar":
         print(args)
-  
+    elif order == "show":
+        if args[1] == "diagram":
+            subprocess.Popen(
+                ["display", "images/diagram.png"],
+                stdout=subprocess.PIPE
+            ) 
+        elif args[1] == "state":
+            printProgramState()
+    
 def connect_machines(vms:list, bridges:dict):
     for i, vm in enumerate(vms):
         if vm.tag == SERVER:
@@ -55,7 +66,7 @@ def connect_machines(vms:list, bridges:dict):
             bridges_to_connect = [bridges["lxdbr1"]]   
         for b in bridges_to_connect:
             bridges_handler.attach(vm.name, to_bridge=b)
-            vms_handler.connect(vm, with_ip=f"{b.ipv4_addr[:-4]}{i+2}", to_network=b.ethernet)
+            vms_handler.connect(vm, with_ip=f"{b.ipv4_addr[:-4]}{i+10}", to_network=b.ethernet)
         vms_handler.configure_netfile(vm)
         
 def serializeVms(numServs) -> list:
@@ -63,10 +74,10 @@ def serializeVms(numServs) -> list:
         return []
     vms = []
     image = "ubuntu1804"
-    for i in range(numServs): 
-        vms.append(VirtualMachine(f"s{i+1}", image, tag=SERVER))
     lb = VirtualMachine("lb", image, tag=LB)
     vms.append(lb)
+    for i in range(numServs): 
+        vms.append(VirtualMachine(f"s{i+1}", image, tag=SERVER))
     # client = VirtualMachine("client", image, tag=CLIENT)
     # vms.append(client)
     return vms
@@ -119,6 +130,8 @@ def configCli() -> Cli:
     cli.addArg("añadir", description=msg, extraArg=True, choices=[1,2,3,4])
     msg = "<name of the server> deletes the server specified"
     cli.addArg("eliminar", description=msg, extraArg=True)
+    msg ="<diagram or state> shows information about the pupose of the program and it's current state"
+    cli.addArg("show", description=msg, extraArg=True, choices=["diagram", "state"])
     
     #Options
     msg = "shows information about every process that is being executed"
