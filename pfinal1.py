@@ -21,7 +21,7 @@ def main():
         main_logger.error(f" {clErr}")
     else:
         if args_processed == None: return
-        bash.applyVerbosity(args_processed)
+        bash.configVerbosity(args_processed)
         main_logger.info(" Programa iniciado")
         bash.execute(args_processed)
         main_logger.info(" Programa finalizado")  

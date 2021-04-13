@@ -94,8 +94,12 @@ def startVms():
 
     if root_logger.level <= logging.WARNING:
         ips = reduce(lambda acum, vm: acum+len(vm.networks), vms, 0)
-        salida = ""
+        salida, t, twait, time_out= "", 0, 0.1, 10
         while not salida.count(".") == 3*ips:
+            sleep(twait); t += twait
+            if t >= time_out:
+                ctrl_logger.error(" timeout del comando 'lxc list'")
+                return
             out = subprocess.Popen(["lxc", "list"], stdout=subprocess.PIPE) 
             salida = out.stdout.read().decode()
             salida = salida[:-1] # Eliminamos el ultimo salto de linea

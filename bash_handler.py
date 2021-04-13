@@ -78,8 +78,8 @@ def serializeVms(numServs) -> list:
     vms.append(lb)
     for i in range(numServs): 
         vms.append(VirtualMachine(f"s{i+1}", image, tag=SERVER))
-    # client = VirtualMachine("client", image, tag=CLIENT)
-    # vms.append(client)
+    client = VirtualMachine("client", image, tag=CLIENT)
+    vms.append(client)
     return vms
 
 def serializeBridges(numBridges) -> dict:
@@ -96,7 +96,7 @@ def serializeBridges(numBridges) -> dict:
         bridges[b_name] = b
     return bridges
 
-def applyVerbosity(args:list):
+def configVerbosity(args:list):
     if "-d" in args:
         logLvl = logging.DEBUG
         args.remove("-d")
