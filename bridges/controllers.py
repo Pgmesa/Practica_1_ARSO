@@ -41,7 +41,7 @@ def initBridges(bridges:list):
     if path.isfile("bridges_register"):
         ctrl_logger.error(" Los bridges ya han sido creados, " +
                                 "se deben destruir los anteriores para crear otros nuevos")
-        return
+        return -1
     ctrl_logger.info(" Creando bridges...\n")
     
     successful = []
@@ -61,8 +61,8 @@ def initBridges(bridges:list):
 
 def deleteBridges():
     if not path.isfile("bridges_register"):
-        ctrl_logger.error(" No existen bridges creadas por el programa")
-        return
+        ctrl_logger.error(" No existen bridges creados por el programa")
+        return -1
     
     ctrl_logger.info(" Eliminando bridges...\n")
     

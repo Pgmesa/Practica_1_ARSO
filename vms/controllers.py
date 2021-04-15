@@ -50,7 +50,7 @@ def initVms(vms:list):
     if path.isfile("vms_register"):
         ctrl_logger.error(" Maquinas virtuales ya inicializadas, " +
                                 "se deben destruir las anteriores para crear otras nuevas")
-        return 
+        return -1
     ctrl_logger.info(" Inicializando maquinas virtuales...\n")
     
     successful = []
@@ -76,8 +76,8 @@ def startVms():
     """Runs the Vms (lb and servers) initialized by createVMs(). 
             The server names created are logged in the register.txt file"""
     if not path.isfile("vms_register"):
-        ctrl_logger.warning(" No existen maquinas virtuales creadas por el programa")
-        return
+        ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
+        return -1
     ctrl_logger.info(" Arrancando maquinas virtuales...\n")
     
     vms = load_vms()
@@ -106,14 +106,40 @@ def startVms():
         print(salida)
 # --------------------------------------------------------------------------
 
+# ------------------------------ cmd pausar ------------------------------
+# -----------------------------------------------------------------------
+def pauseVms():
+    """Stops the VMs (lb and servers) runned by startVMs()
+            (Reads from register.txt which servers have been runned)"""
+    if not path.isfile("vms_register"):
+        ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
+        return -1
+    ctrl_logger.info(" Suspendiendo maquinas virtuales...\n")
+    
+    vms = load_vms()
+    
+    for vm in vms:
+        try:
+            ctrl_logger.info(f" Suspendiendo {vm.tag} '{vm.name}'...")
+            vm.pause()
+            ctrl_logger.info(f" {vm.tag} '{vm.name}' suspendido con exito")
+        except LxcError as err:
+            ctrl_logger.error(err)
+
+    update_vms_register(vms)
+    
+    if root_logger.level <= logging.WARNING:
+        subprocess.call(["lxc", "list"])
+# -----------------------------------------------------------------------
+
 # ------------------------------ cmd parar ------------------------------
 # -----------------------------------------------------------------------
 def stopVms():
     """Stops the VMs (lb and servers) runned by startVMs()
             (Reads from register.txt which servers have been runned)"""
     if not path.isfile("vms_register"):
-        ctrl_logger.warning(" No existen maquinas virtuales creadas por el programa")
-        return
+        ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
+        return -1
     ctrl_logger.info(" Deteniendo maquinas virtuales...\n")
     
     vms = load_vms()
@@ -139,7 +165,7 @@ def deleteVms():
             (Reads from register.txt which servers have been created) and deletes them"""
     if not path.isfile("vms_register"):
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
-        return
+        return -1
     ctrl_logger.info(" Eliminando maquinas virtuales...\n")
     
     vms = load_vms()
@@ -164,6 +190,22 @@ def deleteVms():
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
 # --------------------------------------------------------------------------
+
+def open_vms_terminal(vm_name="all"):
+    if not path.isfile("vms_register"):
+        ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
+        return -1
+    vms = load_vms()
+    for vm in vms:
+        if vm_name == "all" or vm_name == vm.name:
+            try:
+                vm.open_terminal()
+            except LxcError as err:
+                ctrl_logger.error(err)
+            if vm_name != "all": return        
+    else:
+        if vm_name != "all":
+            ctrl_logger.error(f" La vm '{vm_name}' no existe en este programa")
 
 def connect(vm:VirtualMachine, with_ip:str, to_network:str):
     ip, eth = with_ip, to_network

@@ -43,14 +43,18 @@ class VirtualMachine:
         outcome = process.wait()
         if outcome == 0:
             self.state = final_state
-            if order == "start":
-                subprocess.Popen([
-                "xterm","-fa", "monaco", "-fs", "13", "-bg", "black",
-                "-fg", "green", "-e", f"lxc exec {self.name} bash"
-                ])
         else:
             err_msg = process.stderr.read().decode().strip()[6:]
             raise LxcError(err_msg) 
+    
+    def open_terminal(self):
+        if self.state != RUNNING and self.state!= FROZEN:
+            raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
+                                "y no puede abrir la terminal")
+        subprocess.Popen([
+            "xterm","-fa", "monaco", "-fs", "13", "-bg", "black",
+            "-fg", "green", "-e", f"lxc exec {self.name} bash"
+        ])
     
     def init(self):
         if self.state != NOT_INIT:
@@ -63,13 +67,13 @@ class VirtualMachine:
         subprocess.call(["lxc", "config", "set", self.name, "limits.cpu", "2"])
         
     def start(self):
-        if self.state != STOPPED:
+        if self.state != STOPPED and self.state != FROZEN:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser arrancado")
         self.execute_order("start", final_state=RUNNING) 
         
     def stop(self):
-        if self.state != RUNNING:
+        if self.state != RUNNING and self.state != FROZEN:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser detenido")
         self.execute_order("stop", final_state=STOPPED) 
@@ -81,6 +85,9 @@ class VirtualMachine:
         self.execute_order("delete", final_state=DELETED) 
     
     def pause(self):
+        if self.state != RUNNING:
+            raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
+                                "y no puede ser pausado")
         self.execute_order("pause", final_state=FROZEN) 
     
     def launch(self):

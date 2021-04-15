@@ -6,9 +6,10 @@ from contextlib import suppress
 from cli.cli import Cli
 from vms.vm import VirtualMachine
 from bridges.bridge import Bridge
-from tools import printProgramState
 import vms.controllers as vms_handler
+from tools import printProgramState, timer
 import bridges.controllers as bridges_handler
+
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -21,32 +22,43 @@ SERVER = "server"
 LB = "load balancer"
 CLIENT  = "client"
 
+@timer
 def execute(args:list):
     """Executes the commands of the program'"""
     order = args[0]
-    if order == "crear":
+    if order == "crear" or order == "lanzar":
         vms = serializeVms(numServs=args[1])
-        vms_handler.initVms(vms)
-        bridges = serializeBridges(numBridges=2)
-        bridges_handler.initBridges(bridges.values())
-        connect_machines(vms=vms, bridges=bridges)
+        outcome = vms_handler.initVms(vms)
+        if outcome != -1:
+            bridges = serializeBridges(numBridges=2)
+            bridges_handler.initBridges(bridges.values())
+            connect_machines(vms=vms, bridges=bridges)
+            if order == "lanzar":
+                vms_handler.startVms()
     elif order == "arrancar":
         vms_handler.startVms()
+        if "-t" in args:
+            vms_handler.open_vms_terminal()
     elif order == "parar":
         vms_handler.stopVms()
     elif order == "destruir":
         if not "-f" in args:
             print("Se borraran las maquinas virtuales, bridges" + 
                                     " y sus conexiones aun podiendo estar arrancadas")
-            response = str(input("¿Estas seguro?(y/n): "))
-            if response.lower() != "y":
+            answer = str(input("¿Estas seguro?(y/n): "))
+            if answer.lower() != "y":
                 return
-        vms_handler.deleteVms()
-        bridges_handler.deleteBridges()
+        outcome = vms_handler.deleteVms()
+        if outcome != -1:
+            bridges_handler.deleteBridges()
+    elif order == "suspender":
+        vms_handler.pauseVms()
     elif order == "añadir":
         print(args)
     elif order == "eliminar":
         print(args)
+    elif order == "terminal":
+        vms_handler.open_vms_terminal(vm_name=args[1])
     elif order == "show":
         if args[1] == "diagram":
             subprocess.Popen(
@@ -119,19 +131,25 @@ def configCli() -> Cli:
             "          (if void, 2 servers are created). It also initializes a load balancer" + 
             " and connects all vms with bridges")
     cli.addArg("crear", description=msg, extraArg=True, choices=[1,2,3,4,5], default=2)
-    msg = "runs all the virtual machines already created"
+    msg = "runs all the virtual machines already created (stopped or frozen)"
     cli.addArg("arrancar", description=msg)
     msg = "stops the virtual machines currently running"
     cli.addArg("parar", description=msg)
     msg = "deletes every virtual machine created and all connections betweeen them"
     cli.addArg("destruir", description=msg)
     # Other functionalities
+    msg = "pauses the virtual machines currently running"
+    cli.addArg("pausar", description=msg)
+    msg = "executes the create and start commands in a row"
+    cli.addArg("lanzar", description=msg, extraArg=True, choices=[1,2,3,4,5], default=2)
     msg = "<integer between(1-4)> adds the number of servers specified (the program can't surpass 5 servers)"
     cli.addArg("añadir", description=msg, extraArg=True, choices=[1,2,3,4])
     msg = "<name of the server> deletes the server specified"
     cli.addArg("eliminar", description=msg, extraArg=True)
     msg ="<diagram or state> shows information about the pupose of the program and it's current state"
     cli.addArg("show", description=msg, extraArg=True, choices=["diagram", "state"])
+    msg ="<void or vm_name> opens the terminal of a virtual machine or all of them if no name is given"
+    cli.addArg("terminal", description=msg, extraArg=True, default="all")
     
     #Options
     msg = "shows information about every process that is being executed"
@@ -142,4 +160,6 @@ def configCli() -> Cli:
     cli.addOption("-q", notCompatibleWith=["-v","-d"], description=msg)
     msg = "executes the action without asking confirmation"
     cli.addOption("-f", description=msg)
+    msg = "opens the terminal window of the vms that are being started"
+    cli.addOption("-t", description=msg)
     return cli

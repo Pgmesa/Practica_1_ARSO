@@ -23,7 +23,13 @@ def main():
         if args_processed == None: return
         bash.configVerbosity(args_processed)
         main_logger.info(" Programa iniciado")
-        bash.execute(args_processed)
+        try:
+            bash.execute(args_processed)
+        except Exception as err:
+            main_logger.error(" Error inesperado en el programa (no controlado)")
+            answer = input("¿Obtener traza completa?(y/n): ")
+            if answer.lower() == "y":
+                main_logger.exception(err)
         main_logger.info(" Programa finalizado")  
         
 if __name__ == "__main__":
