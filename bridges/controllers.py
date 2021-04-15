@@ -27,8 +27,9 @@ def update_bridge(bridge_to_update:Bridge):
         if b.name == bridge_to_update.name:
             index = i
             break
-    bridges[index] = bridge_to_update
-    update_bridges_register(bridges)
+    if index != None:
+        bridges[index] = bridge_to_update
+        update_bridges_register(bridges)
     
 def load_bridge(name:str) -> Bridge:
     bridges = load_bridges()
@@ -37,27 +38,30 @@ def load_bridge(name:str) -> Bridge:
             return b
 # -------------------------------------------------
 
-def initBridges(bridges:list):
+def initBridges(bridges:list) -> dict:
     if path.isfile("bridges_register"):
         ctrl_logger.error(" Los bridges ya han sido creados, " +
                                 "se deben destruir los anteriores para crear otros nuevos")
-        return -1
+        return None
     ctrl_logger.info(" Creando bridges...\n")
     
-    successful = []
+    successful = {}
+    save = []
     for b in bridges:
         try:
             ctrl_logger.info(f" Creando bridge '{b.name}'...")
             b.create()
             ctrl_logger.info(f" bridge '{b.name}' creado con exito")
-            successful.append(b)
+            save.append(b)
+            successful[b.name] = b
         except LxcNetworkError as err:
             ctrl_logger.error(err)
          
-    update_bridges_register(successful)
+    update_bridges_register(save)
     
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "network", "list"])
+    return successful
 
 def deleteBridges():
     if not path.isfile("bridges_register"):
@@ -94,7 +98,7 @@ def attach(vm_name:str, to_bridge:Bridge):
         ctrl_logger.info(f" '{vm_name}' agregado con exito")
     except LxcNetworkError as err:
         ctrl_logger.error(err)
-    update_bridge(bridge)
+    update_bridge(to_bridge)
     
         
         

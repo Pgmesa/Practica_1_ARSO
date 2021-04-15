@@ -21,14 +21,14 @@ class VirtualMachine:
         self.networks = {}
         
     def add_to_network(self, eth:str, with_ip:str):
-        process = subprocess.Popen([
-            "lxc","config","device","set", self.name,
-            eth,"ipv4.address", with_ip
-        ])
+        cmd = ["lxc","config","device","set", self.name, eth,"ipv4.address", with_ip]
+        process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         outcome = process.wait()
         if outcome != 0:
-            errmsg = process.stderr.read().decode().strip()[6:]
-            raise LxcError(errmsg)
+            err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
+                            "Mensaje de error de subprocess: ->")
+            err_msg += process.stderr.read().decode().strip()[6:]
+            raise LxcError(err_msg)
         self.networks[eth] = with_ip
     
     def execute_order(self, order:str, final_state:str):
@@ -44,11 +44,13 @@ class VirtualMachine:
         if outcome == 0:
             self.state = final_state
         else:
-            err_msg = process.stderr.read().decode().strip()[6:]
+            err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
+                            "Mensaje de error de subprocess: ->")
+            err_msg += process.stderr.read().decode().strip()[6:]
             raise LxcError(err_msg) 
     
     def open_terminal(self):
-        if self.state != RUNNING and self.state!= FROZEN:
+        if self.state != RUNNING:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede abrir la terminal")
         subprocess.Popen([

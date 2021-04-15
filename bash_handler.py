@@ -28,13 +28,15 @@ def execute(args:list):
     order = args[0]
     if order == "crear" or order == "lanzar":
         vms = serializeVms(numServs=args[1])
-        outcome = vms_handler.initVms(vms)
-        if outcome != -1:
+        successful_vms = vms_handler.initVms(vms)
+        if successful_vms != None:
             bridges = serializeBridges(numBridges=2)
-            bridges_handler.initBridges(bridges.values())
-            connect_machines(vms=vms, bridges=bridges)
+            succesful_brdgs = bridges_handler.initBridges(bridges.values())
+            connect_machines(vms=successful_vms, bridges=succesful_brdgs)
             if order == "lanzar":
                 vms_handler.startVms()
+                if "-t" in args:
+                    vms_handler.open_vms_terminal()
     elif order == "arrancar":
         vms_handler.startVms()
         if "-t" in args:
@@ -51,13 +53,13 @@ def execute(args:list):
         outcome = vms_handler.deleteVms()
         if outcome != -1:
             bridges_handler.deleteBridges()
-    elif order == "suspender":
+    elif order == "pausar":
         vms_handler.pauseVms()
     elif order == "añadir":
         print(args)
     elif order == "eliminar":
         print(args)
-    elif order == "terminal":
+    elif order == "xterm":
         vms_handler.open_vms_terminal(vm_name=args[1])
     elif order == "show":
         if args[1] == "diagram":
@@ -70,12 +72,13 @@ def execute(args:list):
     
 def connect_machines(vms:list, bridges:dict):
     for i, vm in enumerate(vms):
-        if vm.tag == SERVER:
-            bridges_to_connect = [bridges["lxdbr0"]]
-        elif vm.tag == LB:
-            bridges_to_connect = [bridges["lxdbr0"], bridges["lxdbr1"]]
-        else:
-            bridges_to_connect = [bridges["lxdbr1"]]   
+        bridges_to_connect = []
+        if vm.tag == SERVER or vm.tag == LB:
+            if "lxdbr0" in bridges:
+                bridges_to_connect.append(bridges['lxdbr0'])
+        if vm.tag == CLIENT or vm.tag == LB:
+            if "lxdbr1" in bridges:
+                bridges_to_connect.append(bridges['lxdbr1'])
         for b in bridges_to_connect:
             bridges_handler.attach(vm.name, to_bridge=b)
             vms_handler.connect(vm, with_ip=f"{b.ipv4_addr[:-4]}{i+10}", to_network=b.ethernet)
@@ -149,7 +152,7 @@ def configCli() -> Cli:
     msg ="<diagram or state> shows information about the pupose of the program and it's current state"
     cli.addArg("show", description=msg, extraArg=True, choices=["diagram", "state"])
     msg ="<void or vm_name> opens the terminal of a virtual machine or all of them if no name is given"
-    cli.addArg("terminal", description=msg, extraArg=True, default="all")
+    cli.addArg("xterm", description=msg, extraArg=True, default="all")
     
     #Options
     msg = "shows information about every process that is being executed"

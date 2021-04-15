@@ -39,25 +39,27 @@ class Bridge:
         self.used_by = []
     
     def add_vm(self, vm_name:str):
-        process = subprocess.Popen([
-            "lxc", "network", "attach",
-            self.name, vm_name, self.ethernet
-        ])
+        cmd = ["lxc", "network", "attach" ,self.name, vm_name, self.ethernet]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         outcome = process.wait()
         if outcome != 0:
-            errmsg = process.stderr.read().decode()[6:]
-            raise LxcNetworkError(errmsg)
+            err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
+                            "Mensaje de error de subprocess: ->")
+            err_msg += process.stderr.read().decode().strip()[6:]
+            raise LxcNetworkError(err_msg)
         else:
             self.used_by.append(vm_name)
     
     def create(self):
         if not self.is_default:
-            process = subprocess.Popen(["lxc","network","create", self.name, "-q"],
-                                       stderr=subprocess.PIPE)
+            cmd = ["lxc","network","create", self.name, "-q"]
+            process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             outcome = process.wait()
             if outcome != 0:
-                errmsg = process.stderr.read().decode()[6:]
-                raise LxcNetworkError(errmsg)   
+                err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
+                                "Mensaje de error de subprocess: ->")
+                err_msg += process.stderr.read().decode().strip()[6:]
+                raise LxcNetworkError(err_msg)   
         subprocess.call(["lxc","network", "set", self.name, "ipv4.nat", self.ipv4_nat])
         subprocess.call(["lxc", "network", "set", self.name, "ipv4.address", self.ipv4_addr])
         subprocess.call(["lxc", "network", "set", self.name, "ipv6.nat", self.ipv6_nat])
@@ -65,12 +67,14 @@ class Bridge:
     
     def delete(self):
         if not self.is_default:
-            process = subprocess.Popen(["lxc","network","delete", self.name, "-q"],
-                                        stderr=subprocess.PIPE)
+            cmd = ["lxc","network","delete", self.name, "-q"]
+            process = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             outcome = process.wait()
             if outcome != 0:
-                errmsg = process.stderr.read().decode().strip()[6:]
-                raise LxcNetworkError(errmsg)
+                err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
+                                "Mensaje de error de subprocess: ->")
+                err_msg += process.stderr.read().decode().strip()[6:]
+                raise LxcNetworkError(err_msg)
         else:
             subprocess.call(["lxc","network", "set", self.name, "ipv4.nat", "false"])
             subprocess.call(["lxc", "network", "set", self.name, "ipv4.address", "none"])

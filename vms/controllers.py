@@ -32,25 +32,24 @@ def update_vm(vm_to_update:VirtualMachine):
         if vm.name == vm_to_update.name:
             index = i
             break
-    vms.pop(index)
-    vms.append(vm_to_update)
-    update_vms_register(vms)
+    if index != None:
+        vms.pop(index)
+        vms.append(vm_to_update)
+        update_vms_register(vms)
     
 def load_vm(name:str) -> VirtualMachine:
     vms = load_vms()
     for vm in vms:
         if vm.name == name:
             return vm
-    
-# ------------------------------ cmd crear ------------------------------
 # -----------------------------------------------------------------------
-def initVms(vms:list):
+def initVms(vms:list) -> list:
     """Creates the num of   servers specified and the load balancer,
             if they have not been initialized yet"""       
     if path.isfile("vms_register"):
         ctrl_logger.error(" Maquinas virtuales ya inicializadas, " +
                                 "se deben destruir las anteriores para crear otras nuevas")
-        return -1
+        return None
     ctrl_logger.info(" Inicializando maquinas virtuales...\n")
     
     successful = []
@@ -67,11 +66,9 @@ def initVms(vms:list):
    
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
+    return successful
     
 # -----------------------------------------------------------------------
-
-# ------------------------------ cmd arrancar ------------------------------
-# --------------------------------------------------------------------------
 def startVms():
     """Runs the Vms (lb and servers) initialized by createVMs(). 
             The server names created are logged in the register.txt file"""
@@ -105,9 +102,6 @@ def startVms():
             salida = salida[:-1] # Eliminamos el ultimo salto de linea
         print(salida)
 # --------------------------------------------------------------------------
-
-# ------------------------------ cmd pausar ------------------------------
-# -----------------------------------------------------------------------
 def pauseVms():
     """Stops the VMs (lb and servers) runned by startVMs()
             (Reads from register.txt which servers have been runned)"""
@@ -130,9 +124,6 @@ def pauseVms():
     
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
-# -----------------------------------------------------------------------
-
-# ------------------------------ cmd parar ------------------------------
 # -----------------------------------------------------------------------
 def stopVms():
     """Stops the VMs (lb and servers) runned by startVMs()
@@ -157,9 +148,6 @@ def stopVms():
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
 # -----------------------------------------------------------------------
-
-# ------------------------------ cmd destruir ------------------------------
-# --------------------------------------------------------------------------
 def deleteVms():
     """Deletes all virtual machine created if they are in a STOPPED state.
             (Reads from register.txt which servers have been created) and deletes them"""
@@ -231,17 +219,19 @@ def configure_netfile(vm:VirtualMachine):
         new_eth_config = (f"        {eth}:\n" + 
                             "            dhcp4: true\n")
         config_file += new_eth_config
-    ctrl_logger.info(f" Configurando el net_file del {vm.tag} '{vm.name}'...")
+    ctrl_logger.info(f" Configurando el net_file del {vm.tag} '{vm.name}'... " +
+                            "(Esta operacion puede tardar un rato dependiendo del PC " + 
+                                "o incluso saltar el timeout si es muy lento)")
     ctrl_logger.debug("\n" + config_file)
     with open("50-cloud-init.yaml", "w") as file:
         file.write(config_file)
     # El problema esta en que lo crea pero al hacer start o debido a que no se ha inicializado todavia se crea el primer
     # fichero sobrescribiendo al nuestro
-    subprocess.call(["lxc","start",vm.name])
+    subprocess.run(["lxc","start",vm.name])
     error = "Error: not found"
     time = 0
-    t0 = 0.5
-    timeout = 10
+    t0 = 2
+    timeout = 60
     while "Error: not found" in error:
         if not time >= timeout:
             process = subprocess.Popen(
@@ -254,8 +244,10 @@ def configure_netfile(vm:VirtualMachine):
             sleep(t0)
             time += t0
         else:
-            subprocess.call(["lxc", "delete", "--force", vm.name])
+            subprocess.call(["lxc","stop",vm.name])
+            #subprocess.call(["lxc", "delete", "--force", vm.name])
             ctrl_logger.error(f" Error al añadir fichero de configuracion a '{vm.name}' (timeout)\n")
+            remove("50-cloud-init.yaml")
             return        
     subprocess.call(["lxc","file","push","50-cloud-init.yaml", f"{vm.name}/etc/netplan/50-cloud-init.yaml"])
     subprocess.call(["lxc","stop",vm.name])

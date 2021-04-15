@@ -25,6 +25,8 @@ def main():
         main_logger.info(" Programa iniciado")
         try:
             bash.execute(args_processed)
+        except KeyboardInterrupt:
+            main_logger.warning(" Programa interrumpido")
         except Exception as err:
             main_logger.error(" Error inesperado en el programa (no controlado)")
             answer = input("¿Obtener traza completa?(y/n): ")
