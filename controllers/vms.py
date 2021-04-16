@@ -6,7 +6,8 @@ from functools import reduce
 from pickle import dump, load
 from contextlib import suppress
 
-from vms.vm import VirtualMachine, LxcError
+import register.register as register
+from classes.vm import VirtualMachine, LxcError
 
 #------------------------ Command line functions -------------------------
 #-------------------------------------------------------------------------
@@ -14,39 +15,40 @@ from vms.vm import VirtualMachine, LxcError
 root_logger = logging.getLogger()
 ctrl_logger = logging.getLogger(__name__)
 
-def update_vms_register(vms:list):
-    with open("vms_register", "wb") as file:
-        dump(vms, file)
+ID = "vms"
+# def update_vms_register(vms:list):
+#     with open("vms_register", "wb") as file:
+#         dump(vms, file)
         
-def load_vms() -> list:
-    try:
-        with open("vms_register", "rb") as file:
-            return load(file)
-    except FileNotFoundError:
-        return None
+# def load_vms() -> list:
+#     try:
+#         with open("vms_register", "rb") as file:
+#             return load(file)
+#     except FileNotFoundError:
+#         return None
 
-def update_vm(vm_to_update:VirtualMachine):
-    vms = load_vms()
-    index = None
-    for i, vm in enumerate(vms):
-        if vm.name == vm_to_update.name:
-            index = i
-            break
-    if index != None:
-        vms.pop(index)
-        vms.append(vm_to_update)
-        update_vms_register(vms)
+# def update_vm(vm_to_update:VirtualMachine):
+#     vms = load_vms()
+#     index = None
+#     for i, vm in enumerate(vms):
+#         if vm.name == vm_to_update.name:
+#             index = i
+#             break
+#     if index != None:
+#         vms.pop(index)
+#         vms.append(vm_to_update)
+#         update_vms_register(vms)
     
-def load_vm(name:str) -> VirtualMachine:
-    vms = load_vms()
-    for vm in vms:
-        if vm.name == name:
-            return vm
+# def load_vm(name:str) -> VirtualMachine:
+#     vms = load_vms()
+#     for vm in vms:
+#         if vm.name == name:
+#             return vm
 # -----------------------------------------------------------------------
 def initVms(vms:list) -> list:
     """Creates the num of   servers specified and the load balancer,
             if they have not been initialized yet"""       
-    if path.isfile("vms_register"):
+    if register.load(register_id=ID) != None:
         ctrl_logger.error(" Maquinas virtuales ya inicializadas, " +
                                 "se deben destruir las anteriores para crear otras nuevas")
         return None
@@ -62,7 +64,7 @@ def initVms(vms:list) -> list:
         except LxcError as err:
             ctrl_logger.error(err)
          
-    update_vms_register(successful)
+    register.add(ID, successful)
    
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
@@ -72,12 +74,12 @@ def initVms(vms:list) -> list:
 def startVms():
     """Runs the Vms (lb and servers) initialized by createVMs(). 
             The server names created are logged in the register.txt file"""
-    if not path.isfile("vms_register"):
+    if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return -1
     ctrl_logger.info(" Arrancando maquinas virtuales...\n")
     
-    vms = load_vms()
+    vms = register.load(register_id=ID)
     
     for vm in vms:
         try:
@@ -87,7 +89,7 @@ def startVms():
         except LxcError as err:
             ctrl_logger.error(err)
 
-    update_vms_register(vms)
+    register.update(ID, vms)
 
     if root_logger.level <= logging.WARNING:
         ips = reduce(lambda acum, vm: acum+len(vm.networks), vms, 0)
@@ -105,12 +107,12 @@ def startVms():
 def pauseVms():
     """Stops the VMs (lb and servers) runned by startVMs()
             (Reads from register.txt which servers have been runned)"""
-    if not path.isfile("vms_register"):
+    if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return -1
     ctrl_logger.info(" Suspendiendo maquinas virtuales...\n")
     
-    vms = load_vms()
+    vms = register.load(register_id=ID)
     
     for vm in vms:
         try:
@@ -120,7 +122,7 @@ def pauseVms():
         except LxcError as err:
             ctrl_logger.error(err)
 
-    update_vms_register(vms)
+    register.update(ID, vms)
     
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
@@ -128,12 +130,12 @@ def pauseVms():
 def stopVms():
     """Stops the VMs (lb and servers) runned by startVMs()
             (Reads from register.txt which servers have been runned)"""
-    if not path.isfile("vms_register"):
+    if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return -1
     ctrl_logger.info(" Deteniendo maquinas virtuales...\n")
     
-    vms = load_vms()
+    vms = register.load(register_id=ID)
     
     for vm in vms:
         try:
@@ -143,7 +145,7 @@ def stopVms():
         except LxcError as err:
             ctrl_logger.error(err)
 
-    update_vms_register(vms)
+    register.update(ID, vms)
     
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
@@ -151,12 +153,12 @@ def stopVms():
 def deleteVms():
     """Deletes all virtual machine created if they are in a STOPPED state.
             (Reads from register.txt which servers have been created) and deletes them"""
-    if not path.isfile("vms_register"):
+    if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return -1
     ctrl_logger.info(" Eliminando maquinas virtuales...\n")
     
-    vms = load_vms()
+    vms = register.load(register_id=ID)
     
     failures = []
     for vm in vms:
@@ -171,9 +173,9 @@ def deleteVms():
             ctrl_logger.error(err)
    
     if len(failures) > 0:
-        update_vms_register(failures)
+        register.update(ID, failures)
     else:
-        remove("vms_register")
+        register.remove(register_id=ID)
         
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
@@ -183,7 +185,7 @@ def open_vms_terminal(vm_name="all"):
     if not path.isfile("vms_register"):
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return -1
-    vms = load_vms()
+    vms = register.load(register_id=ID)
     for vm in vms:
         if vm_name == "all" or vm_name == vm.name:
             try:
@@ -254,3 +256,15 @@ def configure_netfile(vm:VirtualMachine):
     ctrl_logger.info(f" Net del {vm.tag} '{vm.name}' configurada con exito\n")
     remove("50-cloud-init.yaml")
     update_vm(vm)
+    
+def update_vm(vm_to_update:VirtualMachine):
+    vms = register.load(register_id=ID)
+    index = None
+    for i, vm in enumerate(vms):
+        if vm.name == vm_to_update.name:
+            index = i
+            break
+    if index != None:
+        vms.pop(index)
+        vms.append(vm_to_update)
+        register.update(ID, vms)

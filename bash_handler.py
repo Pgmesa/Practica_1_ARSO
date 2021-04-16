@@ -1,14 +1,13 @@
 import logging
 import subprocess
 from os import path
-from contextlib import suppress
 
 from cli.cli import Cli
-from vms.vm import VirtualMachine
-from bridges.bridge import Bridge
-import vms.controllers as vms_handler
+from classes.bridge import Bridge
+from classes.vm import VirtualMachine
+import controllers.vms as vms_handler
 from tools import printProgramState, timer
-import bridges.controllers as bridges_handler
+import controllers.bridges as bridges_handler
 
 
 # -------------------------------BASH HANDLER-------------------------------
@@ -126,7 +125,7 @@ def configVerbosity(args:list):
     root_logger = logging.getLogger()
     root_logger.setLevel(logLvl) 
 
-def configCli() -> Cli:
+def getCli() -> Cli:
     cli = Cli()
     # Arguments
     msg = ("<void or integer between(1-5)> --> " + 

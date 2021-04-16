@@ -4,8 +4,8 @@ from time import time
 from math import floor, ceil
 from functools import reduce
 
-from vms.controllers import load_vms
-from bridges.controllers import load_bridges
+from controllers import vms, bridges
+import register.register as register
 
 root_logger = logging.getLogger()
 
@@ -17,20 +17,19 @@ def timer(func):
         if root_logger.level <= logging.WARNING:
             print(f"Elapsed time: {round(tf-t0, 2)} s")
     return f
-    
 
 def printProgramState():
-    vms = load_vms()
-    bridges = load_bridges()
+    _vms = register.load(register_id=vms.ID)
+    _bridges = register.load(register_id=bridges.ID)
     print("VIRTUAL MACHINES")
-    if vms != None:
-        for vm in vms:
+    if _vms != None:
+        for vm in _vms:
             print(pretty(vm))
     else:
         print("No virtual machines created by the program")
     print("BRIDGES")
-    if bridges != None:       
-        for b in bridges:
+    if _bridges != None:       
+        for b in _bridges:
             print(pretty(b))
     else:
         print("No bridges created by the program")

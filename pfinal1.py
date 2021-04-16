@@ -2,25 +2,25 @@
 import sys
 import logging
 import bash_handler as bash
+import register.register as register
 
 from cli.aux_classes import CmdLineError
-
-logging.basicConfig(level=logging.NOTSET)
-main_logger = logging.getLogger(__name__)
     
 # -------------------------- MAIN (BEGGINING OF EXECUTION)--------------------------
 # ----------------------------------------------------------------------------------
 # This main file just defines the execution flow the program will follow
 
 def main():
-    cli = bash.configCli()
-    args = sys.argv
+    logging.basicConfig(level=logging.NOTSET)
+    main_logger = logging.getLogger(__name__)
+    register.config_location("register/")
+    cli = bash.getCli()
     try:
-        args_processed = cli.processCmdline(args)
+        args_processed = cli.processCmdline(sys.argv)
+        if args_processed == None: return
     except CmdLineError as clErr:
         main_logger.error(f" {clErr}")
     else:
-        if args_processed == None: return
         bash.configVerbosity(args_processed)
         main_logger.info(" Programa iniciado")
         try:
