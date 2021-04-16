@@ -7,32 +7,6 @@ from functools import reduce
 from controllers import vms, bridges
 import register.register as register
 
-root_logger = logging.getLogger()
-
-def timer(func):
-    def f(*a, **ka):
-        t0 = time()
-        func(*a,**ka)
-        tf = time()
-        if root_logger.level <= logging.WARNING:
-            print(f"Elapsed time: {round(tf-t0, 2)} s")
-    return f
-
-def printProgramState():
-    _vms = register.load(register_id=vms.ID)
-    _bridges = register.load(register_id=bridges.ID)
-    print("VIRTUAL MACHINES")
-    if _vms != None:
-        for vm in _vms:
-            print(pretty(vm))
-    else:
-        print("No virtual machines created by the program")
-    print("BRIDGES")
-    if _bridges != None:       
-        for b in _bridges:
-            print(pretty(b))
-    else:
-        print("No bridges created by the program")
         
 def pretty(obj:object) -> str:
     dashes = ""

@@ -32,21 +32,21 @@ class Bridge:
         else:
             self.ipv6_addr = "none"   
         # El ethernet depende de que bridge se ha creado primero
-        # no depende del nombre ni la ip. Por tanto siempre(lxdbr0 -> eth0)
+        # no depende del nombre ni la ip. Por tanto siempre (lxdbr0 -> eth0)
         self.ethernet = ethernet
         self.used_by = []
     
     def run(self, cmd:list):
-        process = subprocess.Popen(
+        process = subprocess.run(
             cmd, 
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE # No queremos que salga en consola
         )
-        outcome = process.wait()
+        outcome = process.returncode
         if outcome != 0:
             err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
                             "Mensaje de error de subprocess: ->")
-            err_msg += process.stderr.read().decode().strip()[6:]
+            err_msg += process.stderr.decode().strip()[6:]
             raise LxcNetworkError(err_msg)
     
     def add_vm(self, vm_name:str):

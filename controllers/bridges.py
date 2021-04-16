@@ -3,41 +3,13 @@ import subprocess
 from os import remove, path
 
 import register.register as register
-from classes.bridge import Bridge, LxcNetworkError
+from wrapper_classes.bridge import Bridge, LxcNetworkError
 
 # -----------------------------------------------
 root_logger = logging.getLogger()
 ctrl_logger = logging.getLogger(__name__)
 
 ID = "bridges"
-
-# def load_bridges() -> list:
-#     try:
-#         with open("bridges_register", "rb") as file:
-#             return load(file)
-#     except FileNotFoundError:
-#         return None
-
-# def update_bridges_register(bridges:list):
-#     with open("bridges_register", "wb") as file:
-#         dump(bridges, file)
-
-# def update_bridge(bridge_to_update:Bridge):
-#     bridges = load_bridges()
-#     index = None
-#     for i, b in enumerate(bridges):
-#         if b.name == bridge_to_update.name:
-#             index = i
-#             break
-#     if index != None:
-#         bridges[index] = bridge_to_update
-#         update_bridges_register(bridges)
-    
-# def load_bridge(name:str) -> Bridge:
-#     bridges = load_bridges()
-#     for b in bridges:
-#         if b.name == name:
-#             return b
 # -------------------------------------------------
 
 def initBridges(bridges:list) -> dict:

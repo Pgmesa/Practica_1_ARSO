@@ -21,16 +21,16 @@ class VirtualMachine:
         self.networks = {}
         
     def run(self, cmd:list):
-        process = subprocess.Popen(
+        process = subprocess.run(
             cmd, 
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE # No queremos que salga en consola
         )
-        outcome = process.wait()
+        outcome = process.returncode
         if outcome != 0:
             err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
                             "Mensaje de error de subprocess: ->")
-            err_msg += process.stderr.read().decode().strip()[6:]
+            err_msg += process.stderr.decode().strip()[6:]
             raise LxcError(err_msg)    
         
     def add_to_network(self, eth:str, with_ip:str):

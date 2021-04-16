@@ -7,7 +7,7 @@ from pickle import dump, load
 from contextlib import suppress
 
 import register.register as register
-from classes.vm import VirtualMachine, LxcError
+from wrapper_classes.vm import VirtualMachine, LxcError
 
 #------------------------ Command line functions -------------------------
 #-------------------------------------------------------------------------
@@ -16,34 +16,6 @@ root_logger = logging.getLogger()
 ctrl_logger = logging.getLogger(__name__)
 
 ID = "vms"
-# def update_vms_register(vms:list):
-#     with open("vms_register", "wb") as file:
-#         dump(vms, file)
-        
-# def load_vms() -> list:
-#     try:
-#         with open("vms_register", "rb") as file:
-#             return load(file)
-#     except FileNotFoundError:
-#         return None
-
-# def update_vm(vm_to_update:VirtualMachine):
-#     vms = load_vms()
-#     index = None
-#     for i, vm in enumerate(vms):
-#         if vm.name == vm_to_update.name:
-#             index = i
-#             break
-#     if index != None:
-#         vms.pop(index)
-#         vms.append(vm_to_update)
-#         update_vms_register(vms)
-    
-# def load_vm(name:str) -> VirtualMachine:
-#     vms = load_vms()
-#     for vm in vms:
-#         if vm.name == name:
-#             return vm
 # -----------------------------------------------------------------------
 def initVms(vms:list) -> list:
     """Creates the num of   servers specified and the load balancer,
@@ -181,20 +153,20 @@ def deleteVms():
         subprocess.call(["lxc", "list"])
 # --------------------------------------------------------------------------
 
-def open_vms_terminal(vm_name="all"):
-    if not path.isfile("vms_register"):
+def open_vms_terminal(vm_name=""):
+    if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
         return -1
     vms = register.load(register_id=ID)
     for vm in vms:
-        if vm_name == "all" or vm_name == vm.name:
+        if vm_name == "" or vm_name == vm.name:
             try:
                 vm.open_terminal()
             except LxcError as err:
                 ctrl_logger.error(err)
-            if vm_name != "all": return        
+            if vm_name != "": return        
     else:
-        if vm_name != "all":
+        if vm_name != "":
             ctrl_logger.error(f" La vm '{vm_name}' no existe en este programa")
 
 def connect(vm:VirtualMachine, with_ip:str, to_network:str):
@@ -225,7 +197,8 @@ def configure_netfile(vm:VirtualMachine):
                             "(Esta operacion puede tardar un rato dependiendo del PC " + 
                                 "o incluso saltar el timeout si es muy lento)")
     ctrl_logger.debug("\n" + config_file)
-    with open("50-cloud-init.yaml", "w") as file:
+    file_location = "controllers/50-cloud-init.yaml"
+    with open(file_location, "w") as file:
         file.write(config_file)
     # El problema esta en que lo crea pero al hacer start o debido a que no se ha inicializado todavia se crea el primer
     # fichero sobrescribiendo al nuestro
@@ -249,12 +222,12 @@ def configure_netfile(vm:VirtualMachine):
             subprocess.call(["lxc","stop",vm.name])
             #subprocess.call(["lxc", "delete", "--force", vm.name])
             ctrl_logger.error(f" Error al añadir fichero de configuracion a '{vm.name}' (timeout)\n")
-            remove("50-cloud-init.yaml")
+            remove(file_location)
             return        
-    subprocess.call(["lxc","file","push","50-cloud-init.yaml", f"{vm.name}/etc/netplan/50-cloud-init.yaml"])
+    subprocess.call(["lxc","file","push",file_location, f"{vm.name}/etc/netplan/50-cloud-init.yaml"])
     subprocess.call(["lxc","stop",vm.name])
     ctrl_logger.info(f" Net del {vm.tag} '{vm.name}' configurada con exito\n")
-    remove("50-cloud-init.yaml")
+    remove(file_location)
     update_vm(vm)
     
 def update_vm(vm_to_update:VirtualMachine):
