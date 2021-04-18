@@ -2,7 +2,7 @@ import logging
 
 from cli.cli import Cli
 from utils.decorators import timer
-import execution.commands as repository
+import bash.commands as repository
 
 # -------------------------------BASH HANDLER-------------------------------
 # --------------------------------------------------------------------------
@@ -13,12 +13,12 @@ import execution.commands as repository
 commands = {}
 
 @timer
-def execute(args:list):
+def execute(args:list, flags:list):
     """Executes the commands of the program'"""
     order = args[0]
     command = commands[order]
     args.pop(0)
-    command(*args)
+    command(*args, flg=flags)
         
 
 def configCli() -> Cli:
@@ -32,12 +32,12 @@ def configCli() -> Cli:
     cli.addArg(cmd, description=msg, extraArg=True, choices=[1,2,3,4,5], default=2)
     commands[cmd] = repository.crear
     
-    cmd, msg = "arrancar", "runs all the virtual machines already created (stopped or frozen)"
-    cli.addArg(cmd, description=msg)
+    cmd, msg = "arrancar", "<void or vm_names> runs the virtual machines specified (stopped or frozen)"
+    cli.addArg(cmd, description=msg, extraArg=True, multi=True)
     commands[cmd] = repository.arrancar
     
     cmd, msg = "parar", "stops the virtual machines currently running"
-    cli.addArg(cmd, description=msg)
+    cli.addArg(cmd, description=msg, extraArg=True, multi=True)
     commands[cmd] = repository.parar
     
     cmd, msg = "destruir", "deletes every virtual machine created and all connections betweeen them"
@@ -46,7 +46,7 @@ def configCli() -> Cli:
     
     # Other functionalities
     cmd, msg = "pausar", "pauses the virtual machines currently running"
-    cli.addArg(cmd, description=msg)
+    cli.addArg(cmd, description=msg, extraArg=True, multi=True)
     commands[cmd] = repository.pausar
     
     cmd, msg = "lanzar", "executes the create and start commands in a row"
@@ -54,19 +54,19 @@ def configCli() -> Cli:
     commands[cmd] = repository.lanzar
 
     cmd, msg = "añadir", "<integer between(1-4)> adds the number of servers specified (the program can't surpass 5 servers)"
-    cli.addArg(cmd, description=msg, extraArg=True, choices=[1,2,3,4])
+    cli.addArg(cmd, description=msg, extraArg=True, choices=[1,2,3,4], mandatory=True)
     commands[cmd] = repository.añadir
     
-    cmd, msg = "eliminar", "<name of the server> deletes the server specified"
-    cli.addArg(cmd, description=msg, extraArg=True)
+    cmd, msg = "eliminar", "<server_name> deletes the servers specified"
+    cli.addArg(cmd, description=msg, extraArg=True, mandatory=True,  multi=True)
     commands[cmd] = repository.eliminar
     
     cmd, msg = "show", "<diagram or state> shows information about the pupose of the program and it's current state"
-    cli.addArg(cmd, description=msg, extraArg=True, choices=["diagram", "state"])
+    cli.addArg(cmd, description=msg, extraArg=True, choices=["diagram", "state"], mandatory=True)
     commands[cmd] = repository.show
     
-    cmd, msg = "xterm", "<void or vm_name> opens the terminal of a virtual machine or all of them if no name is given"
-    cli.addArg(cmd, description=msg, extraArg=True, default="")
+    cmd, msg = "xterm", "<void or vm_name> opens the terminal the vms specified or all of them if no name is given"
+    cli.addArg(cmd, description=msg, extraArg=True, multi=True)
     commands[cmd] = repository.xterm
     
     #Flags/Options
@@ -83,16 +83,16 @@ def configCli() -> Cli:
     return cli
 
 
-def configVerbosity(args:list):
-    if "-d" in args:
+def configVerbosity(flags:list):
+    if "-d" in flags:
         logLvl = logging.DEBUG
-        args.remove("-d")
-    elif "-v" in args:
+        flags.remove("-d")
+    elif "-v" in flags:
         logLvl = logging.INFO
-        args.remove("-v")
-    elif "-q" in args:
+        flags.remove("-v")
+    elif "-q" in flags:
         logLvl = logging.ERROR
-        args.remove("-q")
+        flags.remove("-q")
     else:
         logLvl = logging.WARNING
     root_logger = logging.getLogger()

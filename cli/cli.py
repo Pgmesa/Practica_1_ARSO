@@ -11,9 +11,9 @@ class Cli:
         self.strArgs = []
         self.strOpts = ["-h"]
         
-    def addArg(self, name:str, extraArg:bool=False,
+    def addArg(self, name:str, extraArg:bool=False, mandatory=False, multi=False,
                     choices:list=None, default:any=None, description:str=None):
-        self.arguments.append(Argument(name,extraArg=extraArg,
+        self.arguments.append(Argument(name,extraArg=extraArg, mandatory=mandatory, multi=multi,
                                         choices=choices, default=default, description=description))
         self.strArgs.append(name)
     
@@ -25,7 +25,7 @@ class Cli:
         inArgs.pop(0) # Eliminamos el nombre del programa
         if "-h" in inArgs: 
             self.printHelp()
-            return None
+            return None, "-h"
 
         inOpts = []
         # Miramos a ver si alguna de las opciones validas esta en la linea de comandos introducida
@@ -49,26 +49,32 @@ class Cli:
                 raise CmdLineError("No se han proporcionado argumentos")
             if inArgs[0] == arg.name:
                 if len(inArgs) > 1:
-                    if len(inArgs) > 2: 
-                        # Lo concatenamos para que quede mas bonito
-                        wrongArgs = reduce(lambda string, arg: f"{string} {arg}", inArgs[1:])
-                        raise CmdLineError(f"No se reconocen los comandos: {wrongArgs}")
+                    if len(inArgs) > 2 and not arg.multi: 
+                        err_msg = f"No se permite mas de 1 opcion extra en el comando '{arg.name}'"
+                        raise CmdLineError(err_msg)
                     if arg.extraArg:
-                        try:
-                            secondArg = int(inArgs[1])
-                        except:
-                            secondArg = inArgs[1]
+                        extra_args = []
+                        for extra in inArgs[1:]:
+                            try:
+                                extra_args.append(int(extra))
+                            except:
+                                extra_args.append(extra)
                         if arg.choices == None:
-                            return [arg.name, secondArg] + inOpts
-                        elif secondArg in arg.choices:
-                            return [arg.name, arg.choices[arg.choices.index(secondArg)]] + inOpts
+                            return [arg.name] + extra_args, inOpts
+                        #Todos los extra args deben estar en choices
+                        for extra in extra_args:
+                            if extra not in arg.choices:
+                                break
+                        #Si completa el bucle es que todos son validos
+                        else:
+                            return [arg.name] + extra_args, inOpts
                         raise CmdLineError(f"El parametro extra '{inArgs[1]}' no es valido")
                     else:
                         raise CmdLineError(f"El comando '{inArgs[0]}' no admite parametros extra")
                 elif not arg.default == None:
-                    return [arg.name, arg.default] + inOpts
-                elif not arg.extraArg:
-                    return [arg.name] + inOpts
+                    return [arg.name, arg.default], inOpts
+                elif not arg.mandatory:
+                    return [arg.name], inOpts
                 else:
                     raise CmdLineError(f"El comando '{inArgs[0]}' requiere un parametro extra")
         raise CmdLineError(f"El comando '{inArgs[0]}' no se reconoce")

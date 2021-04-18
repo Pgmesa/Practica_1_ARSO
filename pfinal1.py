@@ -1,7 +1,7 @@
 # Integrantes del grupo: Pablo García Mesa, Santiago González Gómez, Fernando Fernández Martín
 import sys
 import logging
-import execution.bash_handler as bash
+import bash.bash_handler as bash
 import register.register as register
 
 from cli.aux_classes import CmdLineError
@@ -16,15 +16,15 @@ def main():
     register.config_location("register/")
     cli = bash.configCli()
     try:
-        args_processed = cli.processCmdline(sys.argv)
-        if args_processed == None: return
+        args_processed, flags = cli.processCmdline(sys.argv)
+        if args_processed == None and "-h" in flags: return
     except CmdLineError as clErr:
         main_logger.error(f" {clErr}")
     else:
-        bash.configVerbosity(args_processed)
+        bash.configVerbosity(flags)
         main_logger.info(" Programa iniciado")
         try:
-            bash.execute(args_processed)
+            bash.execute(args_processed, flags)
         except KeyboardInterrupt:
             main_logger.warning(" Programa interrumpido")
         except Exception as err:

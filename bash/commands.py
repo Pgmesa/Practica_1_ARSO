@@ -1,12 +1,12 @@
 
 import subprocess
 
-import execution.manager as manager
+import bash.manager as manager
 import controllers.vms as vms_handler
 import controllers.bridges as bridges_handler
 
 
-def crear(*args):
+def crear(*args, **flags):
     vms = manager.serializeVms(numServs=args[0])
     successful_vms = vms_handler.initVms(vms)
     if successful_vms != None:
@@ -15,16 +15,16 @@ def crear(*args):
         manager.connect_machines(vms=successful_vms, bridges=succesful_brdgs)
             
 
-def arrancar(*args):
-    vms_handler.startVms()
-    if "-t" in args:
-        vms_handler.open_vms_terminal()
+def arrancar(*args, **flags):
+    vms_handler.startVms(*args)
+    if "-t" in flags["flg"]:
+        vms_handler.open_vms_terminal(*args)
 
-def parar(*args):
-    vms_handler.stopVms()
+def parar(*args, **flags):
+    vms_handler.stopVms(*args)
 
-def destruir(*args):
-    if not "-f" in args:
+def destruir(*args, **flags):
+    if not "-f" in flags["flg"]:
         print("Se borraran las maquinas virtuales, bridges" + 
                                 " y sus conexiones aun podiendo estar arrancadas")
         answer = str(input("¿Estas seguro?(y/n): "))
@@ -34,20 +34,20 @@ def destruir(*args):
     if outcome != -1:
         bridges_handler.deleteBridges()
 
-def pausar(*args):
-    vms_handler.pauseVms()
+def pausar(*args, **flags):
+    vms_handler.pauseVms(*args)
 
-def lanzar(*args):
-    crear(*args)
-    arrancar(*args)
+def lanzar(*args, **flags):
+    crear(*args, **flags)
+    arrancar(*args[1:], **flags)
 
-def añadir(*args):
-    print(args)
+def añadir(*args, **flags):
+    print(args, flags)
 
-def eliminar(*args):
-    print(args)
+def eliminar(*args, **flags):
+    print(args, flags)
     
-def show(*args):
+def show(*args, **flags):
     if args[0] == "diagram":
         subprocess.Popen(
             ["display", "execution/images/diagram.png"],
@@ -56,5 +56,5 @@ def show(*args):
     elif args[0] == "state":
         manager.printProgramState()
 
-def xterm(*args):
-    vms_handler.open_vms_terminal(vm_name=args[0])
+def xterm(*args, **flags):
+    vms_handler.open_vms_terminal(*args)
