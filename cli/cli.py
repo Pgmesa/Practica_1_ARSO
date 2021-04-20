@@ -1,19 +1,19 @@
 from functools import reduce
 
-from cli.aux_classes import Option, Argument, CmdLineError
+from cli.aux_classes import Command, Flag,  CmdLineError
 
 # ------- Command Line Interface
 class Cli:
     def __init__(self):
-        self.arguments = {}
-        self.options = {"-h": Option("-h", description="shows information" + 
+        self.commands = {}
+        self.flags = {"-h": Flag("-h", description="shows information" + 
                                                     " about the commands available")}
         
-    def addArg(self, name:str, extraArg:bool=False, mandatory=False, multi=False,
+    def add_command(self, name:str, extra_arg:bool=False, mandatory=False, multi=False,
                             choices:list=None, default:any=None, description:str=None):
-        self.arguments[name] = Argument(
+        self.commands[name] = Command(
             name,
-            extraArg=extraArg, 
+            extra_arg=extra_arg, 
             mandatory=mandatory, 
             multi=multi,
             choices=choices, 
@@ -21,104 +21,104 @@ class Cli:
             description=description
         )
     
-    def addOption(self, option:str, notCompatibleWith:list=[], description:str=None):
-        self.options[option] = Option(
-            option, 
-            notCompatibleWith=notCompatibleWith,
+    def add_flag(self, flag:str, notCompatibleWithFlags:list=[], description:str=None):
+        self.flags[flag] = Flag(
+            flag, 
+            notCompatibleWithFlags=notCompatibleWithFlags,
             description=description
         )
         
-    def processCmdline (self, inArgs:list) -> list:
-        inArgs.pop(0) # Eliminamos el nombre del programa
-        if "-h" in inArgs: 
+    def process_cmdline(self, args:list) -> list:
+        args.pop(0) # Eliminamos el nombre del programa
+        if "-h" in args: 
             self.printHelp()
             return None, "-h"
 
-        inOpts = []
+        inFlags = []
         # Miramos a ver si alguna de las opciones validas esta en la linea de comandos introducida
-        for arg in inArgs:
-            for validOpt in self.options.values():
-                if arg == validOpt.name:
-                    if len(inOpts) > 0:
+        for arg in args:
+            for validFlag in self.flags.values():
+                if arg == validFlag.name:
+                    if len(inFlags) > 0:
                         # Comprobamos que son opciones compatibles
-                        for opt in inOpts:
-                            if opt.name in validOpt.ncw or validOpt.name in opt.ncw:
-                                errmsg = f"Las opciones '{opt}' y '{validOpt}' no son compatibles"
+                        for flag in inFlags:
+                            if flag.name in validFlag.ncwf or validFlag.name in flag.ncwf:
+                                errmsg = f"Las opciones '{flag}' y '{validFlag}' no son compatibles"
                                 raise CmdLineError(errmsg)
-                    inOpts.append(validOpt)
+                    inFlags.append(validFlag)
         # Eliminamos las opciones ya procesadas de la linea de comandos  
-        for opt in inOpts: inArgs.remove(opt.name)
+        for flag in inFlags: args.remove(flag.name)
         # Guardamos los nombres de las opciones en vez del objeto Option entero (ya no nos hace falta)
-        inOpts = list(map(lambda opt: str(opt), inOpts))
+        inFlags = list(map(lambda flag: str(flag), inFlags))
 
-        for arg in self.arguments.values():
-            if len(inArgs) == 0:
+        for cmd in self.commands.values():
+            if len(args) == 0:
                 raise CmdLineError("No se han proporcionado argumentos")
-            if inArgs[0] == arg.name:
-                ant = inArgs[0]; parts = {ant: ""}; last_index = 0
-                for i, inarg in enumerate(inArgs):
-                    if inarg in arg.alternatives:
-                        parts[ant] = inArgs[:i]
+            if args[0] == cmd.name:
+                ant = args[0]; parts = {ant: ""}; last_index = 0
+                for i, arg in enumerate(args):
+                    if arg in cmd.options:
+                        parts[ant] = args[:i]
                         last_index = i
-                        ant = inarg
-                parts[ant] = inArgs[last_index:]
+                        ant = arg
+                parts[ant] = args[last_index:]
                 
-                cmd = []
-                for alt_name, part in parts.items():
+                processed_line = []
+                for opt_name, part in parts.items():
                     try:
-                        alt = arg.alternatives[alt_name]
+                        opt = cmd.options[opt_name]
                     except KeyError:
-                        alt = arg
-                    cmd += self.check_arg(part, alt)
-                print(cmd)
-                return cmd, inOpts
-        raise CmdLineError(f"El comando '{inArgs[0]}' no se reconoce")
+                        opt = cmd
+                    processed_line += self.check_command(part, opt)
+                return processed_line, inFlags
+        raise CmdLineError(f"El comando '{args[0]}' no se reconoce")
     
     @staticmethod
-    def check_arg(inArgs, arg):
-        if len(inArgs) > 1:
-            if len(inArgs) > 2 and not arg.multi: 
-                err_msg = f"No se permite mas de 1 opcion extra en el comando '{arg.name}'"
+    def check_command(args, cmd):
+        if len(args) > 1:
+            if len(args) > 2 and not cmd.multi: 
+                err_msg = ("No se permite mas de 1 opcion extra" +
+                                f" en el comando '{cmd.name}'. Comandos incorrectos -> {args[2:]}")
                 raise CmdLineError(err_msg)
-            if arg.extraArg:
+            if cmd.extra_arg:
                 extra_args = []
-                for extra in inArgs[1:]:
+                for extra in args[1:]:
                     try:
                         extra_args.append(int(extra))
                     except:
                         extra_args.append(extra)
-                if arg.choices == None:
-                    return [arg.name] + extra_args
+                if cmd.choices == None:
+                    return [cmd.name] + extra_args
                 #Todos los extra args deben estar en choices
                 for extra in extra_args:
-                    if extra not in arg.choices:
+                    if extra not in cmd.choices:
                         break
                 #Si completa el bucle es que todos son validos
                 else:
-                    return [arg.name] + extra_args
-                raise CmdLineError(f"El parametro extra '{inArgs[1]}' no es valido")
+                    return [cmd.name] + extra_args
+                raise CmdLineError(f"El parametro extra '{args[1]}' no es valido")
             else:
-                raise CmdLineError(f"El comando '{inArgs[0]}' no admite parametros extra")
-        elif not arg.default == None:
-            return [arg.name, arg.default]
-        elif not arg.mandatory:
-            return [arg.name]
+                raise CmdLineError(f"El comando '{args[0]}' no admite parametros extra")
+        elif not cmd.default == None:
+            return [cmd.name, cmd.default]
+        elif not cmd.mandatory:
+            return [cmd.name]
         else:
-            raise CmdLineError(f"El comando '{inArgs[0]}' requiere un parametro extra")
+            raise CmdLineError(f"El comando '{args[0]}' requiere un parametro extra")
     
     def printHelp(self):
         print(" python3 __main__ [commands] <options/flags>")
         print(" + Commands: ")
-        for arg in self.arguments.values():
+        for arg in self.commands.values():
             print(f"    -> {arg.name} --> {arg.description}")
-            for alt in arg.alternatives.values():
-                print(f"        > {alt.name} --> {alt.description}")
-        print(" + Options/Flags: ")   
-        for opt in self.options.values():
-            if not opt.description == None:
-                print(f"    -> {opt.name} --> {opt.description}")
+            for alt in arg.options.values():
+                print(f"        => option '{alt.name}' --> {alt.description}")
+        print(" + Flags: ")   
+        for flag in self.flags.values():
+            if not flag.description == None:
+                print(f"    -> {flag.name} --> {flag.description}")
             else:
-                print(f"    -> {opt.name}")
+                print(f"    -> {flag.name}")
 
 
         

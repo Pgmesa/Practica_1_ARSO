@@ -16,12 +16,12 @@ SERVER = "server"
 LB = "load balancer"
 CLIENT  = "client"
 
+image = "ubuntu1804"
 
 def connect_machines(*vms):
-    if len(vms) == 0:
-        vms = register.load(vms_handler.ID)
     bridges = objectlist_as_dict(register.load(bridges_handler.ID), key_attribute="name")
-    for i, vm in enumerate(vms):
+    j = 0
+    for vm in vms:
         bridges_to_connect = []
         if vm.tag == SERVER or vm.tag == LB:
             if "lxdbr0" in bridges:
@@ -31,27 +31,55 @@ def connect_machines(*vms):
                 bridges_to_connect.append(bridges['lxdbr1'])
         for b in bridges_to_connect:
             bridges_handler.attach(vm.name, to_bridge=b)
-            vms_handler.connect(vm, with_ip=f"{b.ipv4_addr[:-4]}{i+10}", to_network=b.ethernet)
+            # Asiganamos una ip que no exista todavia
+            existing_ips = []
+            existing_vms = register.load(vms_handler.ID)
+            for vm in existing_vms:
+                existing_ips += vm.networks.values() 
+            ip = f"{b.ipv4_addr[:-4]}{j+10}"
+            if existing_vms != None:
+                while ip in existing_ips:
+                    j += 1 
+                    ip = f"{b.ipv4_addr[:-4]}{j+10}"
+            j += 1 
+            vms_handler.connect(vm, with_ip=ip, to_network=b.ethernet)
         vms_handler.configure_netfile(vm)
         
-def serializeVms(*servers) -> list:
+def serialize_vms(*servers) -> list:
+    if register.load(vms_handler.ID) != None: return []
     vms = []
-    image = "ubuntu1804"
     lb = VirtualMachine("lb", image, tag=LB)
     vms.append(lb)
-    if len(servers) == 1 and type(servers[0]) == int:
-        numServs = servers[0]
-        for i in range(numServs): 
-            name = f"s{i+1}"
-            vms.append(VirtualMachine(name, image, tag=SERVER))
-    else:
-        for name in servers: 
-            vms.append(VirtualMachine(name, image, tag=SERVER))
+    vms += serialize_servers(*servers)
     client = VirtualMachine("client", image, tag=CLIENT)
     vms.append(client)
     return vms
 
-def serializeBridges(numBridges:int) -> list:
+def serialize_servers(*servers):
+    servs = []
+    if len(servers) == 0: return []
+    j = 1
+    vms = objectlist_as_dict(register.load(vms_handler.ID), key_attribute="name")
+    if type(servers[0]) == int:
+        numServs = servers[0]
+        for i in range(numServs):
+            try:
+                name = servers[i+1] 
+            except:
+                name = f"s{j}"
+                if vms != None:
+                    while name in vms:
+                        j += 1   
+                        name = f"s{j}"
+                j += 1
+            servs.append(VirtualMachine(name, image, tag=SERVER))
+    else:
+        for name in servers: 
+            servs.append(VirtualMachine(name, image, tag=SERVER))
+    return servs
+
+def serialize_bridges(numBridges:int) -> list:
+    if register.load(bridges_handler.ID) != None: return []
     bridges = []
     for i in range(numBridges):
         b_name = f"lxdbr{i}"

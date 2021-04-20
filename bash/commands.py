@@ -1,5 +1,7 @@
 
 import subprocess
+from utils.tools import objectlist_as_dict
+from contextlib import suppress
 
 import bash.manager as manager
 import controllers.vms_handler as vms_handler
@@ -7,12 +9,14 @@ import controllers.bridges_handler as bridges_handler
 
 
 def crear(*args, **flags):
-    print(args); return
-    vms = manager.serializeVms(*args)
+    args = list(args)
+    with suppress(Exception):
+        args.pop(1)
+    vms = manager.serialize_vms(*args)
     vms_handler.initVms(vms)
-    bridges = manager.serializeBridges(numBridges=2)
+    bridges = manager.serialize_bridges(numBridges=2)
     bridges_handler.initBridges(bridges)
-    manager.connect_machines()
+    manager.connect_machines(*vms)
             
 
 def arrancar(*args, **flags):
@@ -42,7 +46,15 @@ def lanzar(*args, **flags):
     arrancar(*args[1:], **flags)
 
 def añadir(*args, **flags):
-    print(args, flags)
+    args = list(args)
+    with suppress(Exception):
+        args.pop(1)
+    servers = manager.serialize_servers(*args)
+    vms_handler.addVms(servers)
+    manager.connect_machines(*servers)
+    if "-l" in flags["flg"]:
+        vm_names = map(lambda s: s.name, servers)
+        arrancar(*vm_names, **flags)
 
 def eliminar(*args, **flags):
     if not "-f" in flags["flg"]:

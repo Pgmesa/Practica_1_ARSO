@@ -6,23 +6,23 @@ class CmdLineError(Exception):
             msg += hlpm
         super().__init__(msg)
 
-class Argument:
-    def __init__(self, name:str, extraArg:any=False, mandatory=False, multi=False,
+class Command:
+    def __init__(self, name:str, extra_arg:any=False, mandatory=False, multi=False,
                     choices:list=None, default:any=None, description:str=None):
         self.name = name
-        self.extraArg = extraArg
+        self.extra_arg = extra_arg
         self.choices = choices
         self.default = default
         self.description = description 
         self.mandatory = mandatory
         self.multi = multi
-        self.alternatives = {}
+        self.options = {}
     
-    def add_alternative(self, name:str, extraArg:any=False, mandatory=False, multi=False,
+    def add_option(self, name:str, extra_arg:any=False, mandatory=False, multi=False,
                     choices:list=None, default:any=None, description:str=None):
-        self.alternatives[name] = Argument(
+        self.options[name] = Command(
             name,
-            extraArg=extraArg, 
+            extra_arg=extra_arg, 
             mandatory=mandatory, 
             multi=multi,
             choices=choices, 
@@ -33,11 +33,11 @@ class Argument:
     def __str__(self) -> str:
         return self.name 
     
-class Option:
-    def __init__(self, option:str, 
-                    notCompatibleWith:list=[], description:str=None):
-        self.name = option
-        self.ncw = notCompatibleWith + [self.name]
+class Flag:
+    def __init__(self, flag:str, notCompatibleWithFlags:list=[], 
+                 description:str=None):
+        self.name = flag
+        self.ncwf = notCompatibleWithFlags + [self.name]
         self.description = description
         
     def __str__(self) -> str:

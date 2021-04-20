@@ -41,8 +41,22 @@ def initVms(vms:list):
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
 
-# def addVms(*vm_names, num):
+def addVms(vms:list):
     
+    successful = []
+    for vm in vms:
+        try:
+            ctrl_logger.info(f" Añadiendo {vm.tag} '{vm.name}'...")
+            vm.init()
+            ctrl_logger.info(f" {vm.tag} '{vm.name}' añadida con exito")
+            successful.append(vm)
+        except LxcError as err:
+            ctrl_logger.error(err)
+    for vm in successful:     
+        register.update(ID, vm, override=False)
+   
+    if root_logger.level <= logging.WARNING:
+        subprocess.call(["lxc", "list"])
     
 # -----------------------------------------------------------------------
 def startVms(*vm_names):

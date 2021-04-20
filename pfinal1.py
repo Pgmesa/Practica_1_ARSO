@@ -10,18 +10,19 @@ from cli.aux_classes import CmdLineError
 # ----------------------------------------------------------------------------------
 # This main file just defines the execution flow the program will follow
 
+logging.basicConfig(level=logging.NOTSET)
+main_logger = logging.getLogger(__name__)
+
 def main():
-    logging.basicConfig(level=logging.NOTSET)
-    main_logger = logging.getLogger(__name__)
     register.config_location("register/")
-    cli = bash.configCli()
+    cli = bash.config_cli()
     try:
-        args_processed, flags = cli.processCmdline(sys.argv)
+        args_processed, flags = cli.process_cmdline(sys.argv)
         if args_processed == None and "-h" in flags: return
     except CmdLineError as clErr:
         main_logger.error(f" {clErr}")
     else:
-        bash.configVerbosity(flags)
+        bash.config_verbosity(flags)
         main_logger.info(" Programa iniciado")
         try:
             bash.execute(args_processed, flags)

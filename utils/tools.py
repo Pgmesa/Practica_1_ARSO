@@ -36,6 +36,7 @@ def pretty(obj:object) -> str:
     return string
 
 def objectlist_as_dict(l:list, key_attribute:str):
+    if l == None: return None
     dic = {}
     for obj in l:
         with suppress(Exception):
