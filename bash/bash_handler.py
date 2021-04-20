@@ -30,6 +30,8 @@ def configCli() -> Cli:
             "          (if void, 2 servers are created). It also initializes a load balancer" + 
             " and connects all vms with bridges")
     cli.addArg(cmd, description=msg, extraArg=True, choices=[1,2,3,4,5], default=2)
+    alt, msg = "--name", "<vm_names> allows to specify the name of the vms, 's_' is given if void"
+    cli.arguments[cmd].add_alternative(alt, description=msg, extraArg=True, multi=True, mandatory=True)
     commands[cmd] = repository.crear
     
     cmd, msg = "arrancar", "<void or vm_names> runs the virtual machines specified (stopped or frozen)"

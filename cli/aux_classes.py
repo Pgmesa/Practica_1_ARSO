@@ -1,8 +1,10 @@
 
 class CmdLineError(Exception):
-    def __init__(self, msg:str):
+    def __init__(self, msg:str, _help=True):
         hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
-        super().__init__(msg + hlpm)
+        if _help: 
+            msg += hlpm
+        super().__init__(msg)
 
 class Argument:
     def __init__(self, name:str, extraArg:any=False, mandatory=False, multi=False,
@@ -14,6 +16,19 @@ class Argument:
         self.description = description 
         self.mandatory = mandatory
         self.multi = multi
+        self.alternatives = {}
+    
+    def add_alternative(self, name:str, extraArg:any=False, mandatory=False, multi=False,
+                    choices:list=None, default:any=None, description:str=None):
+        self.alternatives[name] = Argument(
+            name,
+            extraArg=extraArg, 
+            mandatory=mandatory, 
+            multi=multi,
+            choices=choices, 
+            default=default, 
+            description=description
+        )
     
     def __str__(self) -> str:
         return self.name 

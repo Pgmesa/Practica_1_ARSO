@@ -64,12 +64,15 @@ def serializeBridges(numBridges:int) -> list:
     return bridges
 
 def update_conexions():
+    bridges = register.load(register_id=bridges_handler.ID)
+    if bridges == None: return
+    
     vms = register.load(register_id=vms_handler.ID)
     if vms == None:
         names_existing_vms = []
     else:
         names_existing_vms = list(map(lambda vm: vm.name, vms))
-    bridges = register.load(register_id=bridges_handler.ID)
+    
     for b in bridges:
         deleted = []
         for vm_name in b.used_by:

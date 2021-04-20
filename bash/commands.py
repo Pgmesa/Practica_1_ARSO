@@ -7,6 +7,7 @@ import controllers.bridges_handler as bridges_handler
 
 
 def crear(*args, **flags):
+    print(args); return
     vms = manager.serializeVms(*args)
     vms_handler.initVms(vms)
     bridges = manager.serializeBridges(numBridges=2)
