@@ -17,13 +17,13 @@ ctrl_logger = logging.getLogger(__name__)
 
 ID = "vms"
 # -----------------------------------------------------------------------
-def initVms(vms:list) -> list:
+def initVms(vms:list):
     """Creates the num of   servers specified and the load balancer,
             if they have not been initialized yet"""       
     if register.load(register_id=ID) != None:
         ctrl_logger.error(" Maquinas virtuales ya inicializadas, " +
                                 "se deben destruir las anteriores para crear otras nuevas")
-        return None
+        return
     ctrl_logger.info(" Inicializando maquinas virtuales...\n")
     
     successful = []
@@ -40,7 +40,9 @@ def initVms(vms:list) -> list:
    
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
-    return successful
+
+# def addVms(*vm_names, num):
+    
     
 # -----------------------------------------------------------------------
 def startVms(*vm_names):
@@ -48,11 +50,13 @@ def startVms(*vm_names):
             The server names created are logged in the register.txt file"""
     if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
-        return -1
-    if vm_names == None:
-        ctrl_logger.info(" Arrancando maquinas virtuales...\n")
-    vms = register.load(register_id=ID)
+        return 
     empty = len(vm_names) == 0
+    
+    if empty:
+        ctrl_logger.info(" Arrancando maquinas virtuales...\n")
+        
+    vms = register.load(register_id=ID) 
     notFound = list(vm_names)
     for vm in vms:
         if empty or vm.name in vm_names:
@@ -69,6 +73,7 @@ def startVms(*vm_names):
     register.update(ID, vms)
 
     if root_logger.level <= logging.WARNING:
+        ctrl_logger.info(" Cargando resultados...")
         running = filter(lambda vm: vm.state == "RUNNING", vms)
         ips = reduce(lambda acum, vm: acum+len(vm.networks), running, 0)
         salida, t, twait, time_out= "", 0, 0.1, 10
@@ -87,12 +92,13 @@ def pauseVms(*vm_names):
             (Reads from register.txt which servers have been runned)"""
     if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
-        return -1
-    if vm_names == None:
+        return 
+    empty = len(vm_names) == 0
+    
+    if empty:
         ctrl_logger.info(" Suspendiendo maquinas virtuales...\n")
     
     vms = register.load(register_id=ID)
-    empty = len(vm_names) == 0
     notFound = list(vm_names)
     for vm in vms:
         if empty or vm.name in vm_names:
@@ -116,12 +122,13 @@ def stopVms(*vm_names):
             (Reads from register.txt which servers have been runned)"""
     if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
-        return -1
-    if vm_names == None:
+        return 
+    empty = len(vm_names) == 0
+    
+    if empty:
         ctrl_logger.info(" Deteniendo maquinas virtuales...\n")
     
     vms = register.load(register_id=ID)
-    empty = len(vm_names) == 0
     notFound = list(vm_names)
     for vm in vms:
         if empty or vm.name in vm_names:
@@ -140,37 +147,44 @@ def stopVms(*vm_names):
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
 # -----------------------------------------------------------------------
-def deleteVms(vm_name:str=""):
+def deleteVms(*vm_names):
     """Deletes all virtual machine created if they are in a STOPPED state.
             (Reads from register.txt which servers have been created) and deletes them"""
     if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
-        return -1
-    ctrl_logger.info(" Eliminando maquinas virtuales...\n")
+        return 
+    empty = len(vm_names) == 0
+    
+    if empty:
+        ctrl_logger.info(" Eliminando maquinas virtuales...\n")
     
     vms = register.load(register_id=ID)
-    
     failures = []
+    success = []
+    not_deleted = []
+    notFound = list(vm_names)
     for vm in vms:
-        if vm_name == "" or vm_name == vm.name:
+        if empty or vm.name in vm_names:
             with suppress(LxcError):
                 vm.stop()
             try:
                 ctrl_logger.info(f" Eliminando {vm.tag} '{vm.name}'...")
                 vm.delete()
+                success.append(vm)
                 ctrl_logger.info(f" {vm.tag} '{vm.name}' eliminado con exito")
             except LxcError as err:
                 failures.append(vm)
-                ctrl_logger.error(err)
-            if vm_name != "": return        
-    else:
-        if vm_name != "":
-            ctrl_logger.error(f" La vm '{vm_name}' no existe en este programa")
-   
-    if len(failures) > 0:
-        register.update(ID, failures)
-    else:
+                ctrl_logger.error(err)  
+            if not empty: notFound.remove(vm.name) 
+        else:
+            not_deleted.append(vm)
+    for name in notFound:
+        ctrl_logger.error(f" La vm '{name}' no existe en este programa")
+    
+    if len(success) == len(vms):
         register.remove(register_id=ID)
+    else:
+        register.update(ID, not_deleted+failures)
         
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "list"])
@@ -179,7 +193,7 @@ def deleteVms(vm_name:str=""):
 def open_vms_terminal(*vm_names):
     if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen maquinas virtuales creadas por el programa")
-        return -1
+        return 
     vms = register.load(register_id=ID)
     empty = len(vm_names) == 0
     notFound = list(vm_names)
@@ -238,7 +252,7 @@ def configure_netfile(vm:VirtualMachine):
                 stderr=subprocess.PIPE
             )
             error = process.communicate()[1].decode().strip()
-            ctrl_logger.debug(f"Intentando acceder a fichero de configuracion de '{vm.name}'' (stderr = '{error}') -> "
+            ctrl_logger.debug(f"Intentando acceder a fichero de configuracion de '{vm.name}' (stderr = '{error}') -> "
                                     + ("SUCCESS" if error == "" else "ERROR"))
             sleep(t0)
             time += t0

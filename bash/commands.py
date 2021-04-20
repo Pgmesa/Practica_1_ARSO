@@ -2,17 +2,16 @@
 import subprocess
 
 import bash.manager as manager
-import controllers.vms as vms_handler
-import controllers.bridges as bridges_handler
+import controllers.vms_handler as vms_handler
+import controllers.bridges_handler as bridges_handler
 
 
 def crear(*args, **flags):
-    vms = manager.serializeVms(numServs=args[0])
-    successful_vms = vms_handler.initVms(vms)
-    if successful_vms != None:
-        bridges = manager.serializeBridges(numBridges=2)
-        succesful_brdgs = bridges_handler.initBridges(bridges.values())
-        manager.connect_machines(vms=successful_vms, bridges=succesful_brdgs)
+    vms = manager.serializeVms(*args)
+    vms_handler.initVms(vms)
+    bridges = manager.serializeBridges(numBridges=2)
+    bridges_handler.initBridges(bridges)
+    manager.connect_machines()
             
 
 def arrancar(*args, **flags):
@@ -30,9 +29,9 @@ def destruir(*args, **flags):
         answer = str(input("¿Estas seguro?(y/n): "))
         if answer.lower() != "y":
             return
-    outcome = vms_handler.deleteVms()
-    if outcome != -1:
-        bridges_handler.deleteBridges()
+    vms_handler.deleteVms()
+    manager.update_conexions()
+    bridges_handler.deleteBridges()
 
 def pausar(*args, **flags):
     vms_handler.pauseVms(*args)
@@ -45,12 +44,18 @@ def añadir(*args, **flags):
     print(args, flags)
 
 def eliminar(*args, **flags):
-    print(args, flags)
+    if not "-f" in flags["flg"]:
+        print("Se eliminaran los servidores: '", *args, "'")
+        answer = str(input("¿Estas seguro?(y/n): "))
+        if answer.lower() != "y":
+            return
+    vms_handler.deleteVms(*args)
+    manager.update_conexions()
     
 def show(*args, **flags):
     if args[0] == "diagram":
         subprocess.Popen(
-            ["display", "execution/images/diagram.png"],
+            ["display", "bash/images/diagram.png"],
             stdout=subprocess.PIPE
         ) 
     elif args[0] == "state":

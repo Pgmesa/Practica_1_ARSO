@@ -64,12 +64,16 @@ class Bridge:
         self.run(["lxc", "network", "set", self.name, "ipv6.address", self.ipv6_addr])
     
     def delete(self):
-        if not self.is_default:
-            cmd = ["lxc","network","delete", self.name, "-q"]
-            self.run(cmd)
+        if len(self.used_by) == 0:
+            if not self.is_default:
+                cmd = ["lxc","network","delete", self.name, "-q"]
+                self.run(cmd)
+            else:
+                self.run(["lxc","network", "set", self.name, "ipv4.nat", "false"])
+                self.run(["lxc", "network", "set", self.name, "ipv4.address", "none"])
         else:
-            self.run(["lxc","network", "set", self.name, "ipv4.nat", "false"])
-            self.run(["lxc", "network", "set", self.name, "ipv4.address", "none"])
+            raise LxcNetworkError(f" El bridge '{self.name}' esta siendo usado " +
+                                        f"por: {self.used_by} y no se puede eliminar")
         
     def __str__(self):
         return self.name

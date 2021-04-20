@@ -57,7 +57,7 @@ def configCli() -> Cli:
     cli.addArg(cmd, description=msg, extraArg=True, choices=[1,2,3,4], mandatory=True)
     commands[cmd] = repository.añadir
     
-    cmd, msg = "eliminar", "<server_name> deletes the servers specified"
+    cmd, msg = "eliminar", "<vm_names> deletes the vms specified"
     cli.addArg(cmd, description=msg, extraArg=True, mandatory=True,  multi=True)
     commands[cmd] = repository.eliminar
     

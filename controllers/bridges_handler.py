@@ -12,16 +12,15 @@ ctrl_logger = logging.getLogger(__name__)
 ID = "bridges"
 # -------------------------------------------------
 
-def initBridges(bridges:list) -> dict:
+def initBridges(bridges:list):
     
     if register.load(register_id=ID) != None:
         ctrl_logger.error(" Los bridges ya han sido creados, " +
                                 "se deben destruir los anteriores para crear otros nuevos")
-        return None
+        return
     
     ctrl_logger.info(" Creando bridges...\n")
     
-    successful = {}
     save = []
     for b in bridges:
         try:
@@ -29,7 +28,6 @@ def initBridges(bridges:list) -> dict:
             b.create()
             ctrl_logger.info(f" bridge '{b.name}' creado con exito")
             save.append(b)
-            successful[b.name] = b
         except LxcNetworkError as err:
             ctrl_logger.error(err)
          
@@ -37,12 +35,11 @@ def initBridges(bridges:list) -> dict:
     
     if root_logger.level <= logging.WARNING:
         subprocess.call(["lxc", "network", "list"])
-    return successful
 
 def deleteBridges():
     if register.load(register_id=ID) == None:
         ctrl_logger.error(" No existen bridges creados por el programa")
-        return -1
+        return 
     
     ctrl_logger.info(" Eliminando bridges...\n")
     
@@ -56,7 +53,7 @@ def deleteBridges():
             ctrl_logger.info(f" bridge '{b.name}' eliminado con exito")
         except LxcNetworkError as err:
             failures.append(b)
-            ctrl_logger.error(f" Fallo al eliminar bridge '{b.name}' -> {err}")
+            ctrl_logger.error(err)
    
     if len(failures) > 0:
         register.update(ID,failures)

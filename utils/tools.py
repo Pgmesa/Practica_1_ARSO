@@ -1,11 +1,6 @@
-import logging
-import traceback
-from time import time
-from math import floor, ceil
-from functools import reduce
 
-from controllers import vms, bridges
-import register.register as register
+from math import floor, ceil
+from contextlib import suppress
 
         
 def pretty(obj:object) -> str:
@@ -40,6 +35,14 @@ def pretty(obj:object) -> str:
     string = dashes + "\n" + names_line + "\n" + dashes + "\n" + values_line + "\n" + dashes
     return string
 
+def objectlist_as_dict(l:list, key_attribute:str):
+    dic = {}
+    for obj in l:
+        with suppress(Exception):
+            dic[getattr(obj, key_attribute)] = obj
+    return dic
+    
+    
     
     
     
