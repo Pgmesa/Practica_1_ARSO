@@ -6,62 +6,62 @@ import register.register as register
 from wrapper_classes.bridge import Bridge, LxcNetworkError
 
 # -----------------------------------------------
-root_logger = logging.getLogger()
+
 ctrl_logger = logging.getLogger(__name__)
 
 ID = "bridges"
+
+def serialize(numBridges:int) -> list:
+    if register.load(ID) != None: return []
+    bridges = []
+    for i in range(numBridges):
+        b_name = f"lxdbr{i}"
+        b = Bridge(
+            b_name, 
+            ethernet=f"eth{i}",
+            ipv4_nat=True, ipv4_addr=f"10.0.{i}.1/24"
+        )
+        bridges.append(b)
+    return bridges
+
 # -------------------------------------------------
 
-def initBridges(bridges:list):
-    
-    if register.load(register_id=ID) != None:
-        ctrl_logger.error(" Los bridges ya han sido creados, " +
-                                "se deben destruir los anteriores para crear otros nuevos")
-        return
-    
-    ctrl_logger.info(" Creando bridges...\n")
-    
-    save = []
+def init(*bridges, show_list=True):
+    successful = []
     for b in bridges:
         try:
             ctrl_logger.info(f" Creando bridge '{b.name}'...")
             b.create()
             ctrl_logger.info(f" bridge '{b.name}' creado con exito")
-            save.append(b)
+            successful.append(b)
         except LxcNetworkError as err:
             ctrl_logger.error(err)
-         
-    register.add(ID, save)
+            
+    register.add(ID, successful)
     
-    if root_logger.level <= logging.WARNING:
+    if show_list:
         subprocess.call(["lxc", "network", "list"])
+    
+    if len(successful) == 0:
+        return None    
+    return successful
 
-def deleteBridges():
-    if register.load(register_id=ID) == None:
-        ctrl_logger.error(" No existen bridges creados por el programa")
-        return 
-    
-    ctrl_logger.info(" Eliminando bridges...\n")
-    
-    bridges = register.load(register_id=ID)
-    
-    failures = []
+
+def delete(*bridges, show_list=True):
+    successful = []
     for b in bridges:
         try:
             ctrl_logger.info(f" Eliminando bridge '{b.name}'...")
             b.delete()
-            ctrl_logger.info(f" bridge '{b.name}' eliminado con exito")
+            ctrl_logger.info(f"  Bridge '{b.name}' eliminado con exito")
+            successful.append(b)
         except LxcNetworkError as err:
-            failures.append(b)
-            ctrl_logger.error(err)
-   
-    if len(failures) > 0:
-        register.update(ID,failures)
-    else:
-        register.remove(register_id=ID)
+            ctrl_logger.error(err) 
         
-    if root_logger.level <= logging.WARNING:
+    if show_list:
         subprocess.call(["lxc", "network", "list"])
+        
+    return successful
 
 def attach(vm_name:str, to_bridge:Bridge):
     bridge = to_bridge

@@ -29,7 +29,7 @@ def add(register_id:any, obj:object):
 def update(register_id:any, obj:object, override:bool=True, dict_id:any=None):
     register = load()
     if register == None or register_id not in register:
-        raise RegisterError(f" id -> {register_id} was not found in the register")
+        raise RegisterError(f" id -> '{register_id}' was not found in the register")
     if override == True:
         register[register_id] = obj
     else:
@@ -45,7 +45,7 @@ def update(register_id:any, obj:object, override:bool=True, dict_id:any=None):
                 err_msg = (
                     " A key is needed ('dict_id' property) for updating " + 
                         "(without overriding) the dictionary saved in the " + 
-                            f"register with id {register_id}"
+                            f"register with id '{register_id}'"
                 )
                 raise RegisterError(err_msg)
         elif type(value_saved) == tuple:
@@ -88,7 +88,7 @@ def remove(register_id=None):
             else:
                 override(register)
         else:
-            raise RegisterError(f" id {register_id} was not found")
+            raise RegisterError(f" id '{register_id}' was not found")
     else:
         if os.path.exists(REL_PATH): 
             os.remove(REL_PATH)

@@ -11,7 +11,7 @@ DELETED = "DELETED"
 class LxcError(Exception):
     pass
 
-class VirtualMachine:
+class Container:
     
     def __init__(self, name:str, container_image:str, tag:str=""):
         self.name = name

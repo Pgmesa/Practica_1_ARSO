@@ -50,10 +50,6 @@ def config_cli() -> Cli:
     cmd, msg = "pausar", "pauses the virtual machines currently running"
     cli.add_command(cmd, description=msg, extra_arg=True, multi=True)
     commands[cmd] = repository.pausar
-    
-    cmd, msg = "lanzar", "executes the create and start commands in a row"
-    cli.add_command(cmd, description=msg, extra_arg=True, choices=[1,2,3,4,5], default=2)
-    commands[cmd] = repository.lanzar
 
     cmd, msg = "añadir", "<integer between(1-4)> adds the number of servers specified (the program can't surpass 5 servers)"
     cli.add_command(cmd, description=msg, extra_arg=True, choices=[1,2,3,4], mandatory=True)
@@ -92,13 +88,10 @@ def config_cli() -> Cli:
 def config_verbosity(flags:list):
     if "-d" in flags:
         logLvl = logging.DEBUG
-        flags.remove("-d")
     elif "-v" in flags:
         logLvl = logging.INFO
-        flags.remove("-v")
     elif "-q" in flags:
         logLvl = logging.ERROR
-        flags.remove("-q")
     else:
         logLvl = logging.WARNING
     root_logger = logging.getLogger()

@@ -43,7 +43,17 @@ def objectlist_as_dict(l:list, key_attribute:str):
             dic[getattr(obj, key_attribute)] = obj
     return dic
     
+def concat_array(*args, separator=","):
+    c = ""
+    for i, arg in enumerate(args):
+        if i == len(args) - 1:
+            c += str(arg)
+        else:
+            c += str(arg) + separator + " "
+    return c
     
-    
-    
+def remove_many(*remove, remove_in:list):
+    for r in remove:
+        with suppress(Exception):
+            remove_in.remove(r)
     
