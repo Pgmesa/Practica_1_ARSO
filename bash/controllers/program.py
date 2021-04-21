@@ -1,12 +1,16 @@
 
+import logging
 import subprocess
 from os import path
+from time import sleep
+from functools import reduce
 
 from utils.tools import pretty, objectlist_as_dict
 import register.register as register
 import bash.controllers.containers as containers
 import bash.controllers.bridges as bridges
 
+program_logger = logging.getLogger(__name__)
 
 def connect_machines():
     # Si no hay puentes a los que conectar salimos
@@ -83,3 +87,28 @@ def show_diagram():
         ["display", "bash/images/diagram.png"],
         stdout=subprocess.PIPE
     ) 
+    
+def lxc_list():
+    cs = register.load(containers.ID)
+    program_logger.info(" Cargando resultados...")
+    if cs == None:
+        subprocess.call(["lxc", "list"]) 
+        return
+    running = list(filter(lambda vm: vm.state == "RUNNING", cs))
+    if len(running) == 0:
+        subprocess.call(["lxc", "list"]) 
+        return
+    ips = reduce(lambda acum, vm: acum+len(vm.networks), running, 0)
+    salida, t, twait, time_out= "", 0, 0.1, 10
+    while not salida.count(".") == 3*ips:
+        sleep(twait); t += twait
+        if t >= time_out:
+            program_logger.error(" timeout del comando 'lxc list'")
+            return
+        out = subprocess.Popen(["lxc", "list"], stdout=subprocess.PIPE) 
+        salida = out.stdout.read().decode()
+        salida = salida[:-1] # Eliminamos el ultimo salto de linea
+    print(salida)
+
+def lxc_network_list():
+    subprocess.call(["lxc", "network", "list"])

@@ -36,11 +36,6 @@ def init(*bridges, show_list=True):
             successful.append(b)
         except LxcNetworkError as err:
             ctrl_logger.error(err)
-            
-    register.add(ID, successful)
-    
-    if show_list:
-        subprocess.call(["lxc", "network", "list"])
     
     if len(successful) == 0:
         return None    
@@ -57,9 +52,6 @@ def delete(*bridges, show_list=True):
             successful.append(b)
         except LxcNetworkError as err:
             ctrl_logger.error(err) 
-        
-    if show_list:
-        subprocess.call(["lxc", "network", "list"])
         
     return successful
 

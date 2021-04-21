@@ -2,7 +2,7 @@ import logging
 import subprocess
 from time import sleep
 from os import remove, path
-from functools import reduce
+
 from pickle import dump, load
 from contextlib import suppress
 
@@ -59,6 +59,19 @@ def serialize_servers(*servers):
 
 ctrl_logger = logging.getLogger(__name__)
 
+def catch(func):
+    def catched (*containers, **optionals):
+        successful = []
+        for c in containers:
+            try:
+                func(*containers, **optionals)
+                successful.append(c)
+            except LxcError as err:
+                ctrl_logger.error(err)      
+        return successful
+    return catched
+
+
 # -----------------------------------------------------------------------
 def init(*containers, show_list=True):            
     successful = []
@@ -70,34 +83,8 @@ def init(*containers, show_list=True):
             successful.append(c)
         except LxcError as err:
             ctrl_logger.error(err)      
-   
-    register.add(ID, successful)
-   
-    if show_list:
-        subprocess.call(["lxc", "list"])
            
     return successful
-
-def add(*containers, show_list=True):
-    successful = []
-    for c in containers:
-        try:
-            ctrl_logger.info(f" Inicializando {c.tag} '{c.name}'...")
-            c.init()
-            ctrl_logger.info(f" {c.tag} '{c.name}' inicializado con exito")
-            successful.append(c)
-        except LxcError as err:
-            ctrl_logger.error(err)      
-   
-    register.add(ID, successful)
-    
-    register.update(ID, successful, override=False)
-   
-    if show_list:
-        subprocess.call(["lxc", "list"])
-     
-    return successful
-    
 # -----------------------------------------------------------------------
 def start(*containers, show_list=True):
     for c in containers:
@@ -108,22 +95,6 @@ def start(*containers, show_list=True):
         except LxcError as err:
             ctrl_logger.error(err)
         
-    register.update(ID, list(containers))
-    
-    if show_list:
-        ctrl_logger.info(" Cargando resultados...")
-        running = filter(lambda vm: vm.state == "RUNNING", containers)
-        ips = reduce(lambda acum, vm: acum+len(vm.networks), running, 0)
-        salida, t, twait, time_out= "", 0, 0.1, 10
-        while not salida.count(".") == 3*ips:
-            sleep(twait); t += twait
-            if t >= time_out:
-                ctrl_logger.error(" timeout del comando 'lxc list'")
-                return
-            out = subprocess.Popen(["lxc", "list"], stdout=subprocess.PIPE) 
-            salida = out.stdout.read().decode()
-            salida = salida[:-1] # Eliminamos el ultimo salto de linea
-        print(salida)
 # --------------------------------------------------------------------------
 def pause(*containers, show_list=True):
     """Stops the VMs (lb and servers) runned by startVMs()
@@ -135,11 +106,6 @@ def pause(*containers, show_list=True):
             ctrl_logger.info(f" {c.tag} '{c.name}' suspendido con exito")
         except LxcError as err:
             ctrl_logger.error(err) 
-      
-    register.update(ID, list(containers))     
-            
-    if show_list:
-        subprocess.call(["lxc", "list"])
 # -----------------------------------------------------------------------
 def stop(*containers, show_list=True):
     for c in containers:
@@ -149,11 +115,6 @@ def stop(*containers, show_list=True):
             ctrl_logger.info(f" {c.tag} '{c.name}' detenido con exito")
         except LxcError as err:
             ctrl_logger.error(err) 
-            
-    register.update(ID, list(containers))        
-            
-    if show_list:
-        subprocess.call(["lxc", "list"])
 
 # -----------------------------------------------------------------------
 def delete(*containers, show_list=True):
@@ -170,14 +131,16 @@ def delete(*containers, show_list=True):
             successful.append(c)
         except LxcError as err:
             ctrl_logger.error(err) 
-            
-    register.update(ID, list(containers))        
-        
-    if show_list:
-        subprocess.call(["lxc", "list"])
         
     return successful
 # --------------------------------------------------------------------------
+
+def open_terminals(*containers):
+    for c in containers:
+        try:
+            c.open_terminal()
+        except LxcError as err:
+            ctrl_logger.error(err)
 
 def connect(c:Container, with_ip:str, to_network:str):
     ip, eth = with_ip, to_network
