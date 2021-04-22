@@ -1,6 +1,8 @@
+
 import os
 import pickle
 from contextlib import suppress
+
 
 class RegisterError(Exception):
     def __init__(self, msg):

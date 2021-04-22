@@ -35,7 +35,7 @@ def pretty(obj:object) -> str:
     string = dashes + "\n" + names_line + "\n" + dashes + "\n" + values_line + "\n" + dashes
     return string
 
-def objectlist_as_dict(l:list, key_attribute:str):
+def objectlist_as_dict(l:list, key_attribute:str) -> dict:
     if l == None: return None
     dic = {}
     for obj in l:
@@ -43,13 +43,13 @@ def objectlist_as_dict(l:list, key_attribute:str):
             dic[getattr(obj, key_attribute)] = obj
     return dic
     
-def concat_array(*args, separator=","):
+def concat_array(array, separator=",") -> str:
     c = ""
-    for i, arg in enumerate(args):
-        if i == len(args) - 1:
-            c += str(arg)
+    for i, obj in enumerate(array):
+        if i == len(array) - 1:
+            c += str(obj)
         else:
-            c += str(arg) + separator + " "
+            c += str(obj) + separator + " "
     return c
     
 def remove_many(*remove, remove_in:list):

@@ -1,20 +1,24 @@
 
 import logging
 import subprocess
-from os import path
 from time import sleep
 from functools import reduce
 
-from utils.tools import pretty, objectlist_as_dict
-import register.register as register
-import bash.controllers.containers as containers
-import bash.controllers.bridges as bridges
+
+import program.controllers.bridges as bridges
+import program.controllers.containers as containers
+import program.machines as machines
+import dependencies.register.register as register
+from dependencies.utils.tools import pretty, objectlist_as_dict
 
 program_logger = logging.getLogger(__name__)
-
+# --------------------------------------------------------------------
 def connect_machines():
     # Si no hay puentes a los que conectar salimos
-    bgs = objectlist_as_dict(register.load(bridges.ID), key_attribute="name")
+    bgs = objectlist_as_dict(
+        register.load(bridges.ID),
+        key_attribute="name"
+    )
     if bgs == None: return
     # Si no hay vms creadas que conectar salimos
     cs = register.load(containers.ID)
@@ -28,10 +32,10 @@ def connect_machines():
         # Si ya se ha conectado continuamos con la siguiente
         if len(c.networks) > 0: continue
         bridges_to_connect = []
-        if c.tag == containers.SERVER or c.tag == containers.LB:
+        if c.tag == machines.SERVER or c.tag == machines.LB:
             if "lxdbr0" in bgs:
                 bridges_to_connect.append(bgs['lxdbr0'])
-        if c.tag == containers.CLIENT or c.tag == containers.LB:
+        if c.tag == machines.CLIENT or c.tag == machines.LB:
             if "lxdbr1" in bgs:
                 bridges_to_connect.append(bgs['lxdbr1'])
         for b in bridges_to_connect:
@@ -42,10 +46,12 @@ def connect_machines():
                 ip = f"{b.ipv4_addr[:-4]}{j+10}"  
             existing_ips.append(ip)
             bridges.attach(c.name, to_bridge=b)
-            containers.connect(c, with_ip=ip, to_network=b.ethernet)
-        else:
-            containers.configure_netfile(c)
-    
+            containers.connect(
+                c,
+                with_ip=ip,
+                to_network=b.ethernet
+            )
+        containers.configure_netfile(c)
 
 def update_conexions():
     bgs = register.load(register_id=bridges.ID)
@@ -65,7 +71,7 @@ def update_conexions():
             b.used_by.remove(d)
     register.update(bridges.ID, bgs)
     
-
+# --------------------------------------------------------------------
 def print_state():
     cs = register.load(register_id=containers.ID)
     bgs = register.load(register_id=bridges.ID)
@@ -84,21 +90,24 @@ def print_state():
         
 def show_diagram():
     subprocess.Popen(
-        ["display", "bash/images/diagram.png"],
+        ["display", "program/images/diagram.png"],
         stdout=subprocess.PIPE
     ) 
-    
+
+# --------------------------------------------------------------------   
 def lxc_list():
     cs = register.load(containers.ID)
     program_logger.info(" Cargando resultados...")
     if cs == None:
         subprocess.call(["lxc", "list"]) 
         return
-    running = list(filter(lambda vm: vm.state == "RUNNING", cs))
-    if len(running) == 0:
+    running = list(filter(lambda c: c.state == "RUNNING", cs))
+    frozen = list(filter(lambda c: c.state == "FROZEN", cs))
+    total = running+frozen
+    if len(total) == 0:
         subprocess.call(["lxc", "list"]) 
         return
-    ips = reduce(lambda acum, vm: acum+len(vm.networks), running, 0)
+    ips = reduce(lambda acum, c: acum+len(c.networks), total, 0)
     salida, t, twait, time_out= "", 0, 0.1, 10
     while not salida.count(".") == 3*ips:
         sleep(twait); t += twait
@@ -112,3 +121,5 @@ def lxc_list():
 
 def lxc_network_list():
     subprocess.call(["lxc", "network", "list"])
+    
+# --------------------------------------------------------------------

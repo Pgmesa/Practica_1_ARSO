@@ -1,10 +1,9 @@
 # Integrantes del grupo: Pablo García Mesa, Santiago González Gómez, Fernando Fernández Martín
 import sys
 import logging
-import bash.bash_handler as bash
-import register.register as register
 
-from cli.aux_classes import CmdLineError
+import bash.bash_handler as bash
+from dependencies.cli.aux_classes import CmdLineError
     
 # -------------------------- MAIN (BEGGINING OF EXECUTION)--------------------------
 # ----------------------------------------------------------------------------------
@@ -14,7 +13,6 @@ logging.basicConfig(level=logging.NOTSET)
 main_logger = logging.getLogger(__name__)
 
 def main():
-    register.config_location("register/")
     cli = bash.config_cli()
     try:
         args_processed, flags = cli.process_cmdline(sys.argv)

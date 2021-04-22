@@ -1,6 +1,6 @@
-from functools import reduce
 
-from cli.aux_classes import Command, Flag,  CmdLineError
+from .aux_classes import Command, Flag,  CmdLineError
+
 
 # ------- Command Line Interface
 class Cli:
@@ -35,7 +35,7 @@ class Cli:
             return None, "-h"
 
         inFlags = []
-        # Miramos a ver si alguna de las opciones validas esta en la linea de comandos introducida
+        # Miramos a ver si alguno de los flags validos esta en la linea de comandos introducida
         for arg in args:
             for validFlag in self.flags.values():
                 if arg == validFlag.name:
@@ -50,7 +50,7 @@ class Cli:
         for flag in inFlags: args.remove(flag.name)
         # Guardamos los nombres de las opciones en vez del objeto Option entero (ya no nos hace falta)
         inFlags = list(map(lambda flag: str(flag), inFlags))
-
+        # Revisamos si alguno de los comandos validos esta en la linea de comandos introducida
         for cmd in self.commands.values():
             if len(args) == 0:
                 raise CmdLineError("No se han proporcionado argumentos")
