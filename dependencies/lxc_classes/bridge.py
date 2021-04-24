@@ -56,7 +56,7 @@ class Bridge:
     
     def create(self):
         if not self.is_default:
-            cmd = ["lxc","network","create", self.name, "-q"]
+            cmd = ["lxc","network","create", self.name]
             self.run(cmd)   
         self.run(["lxc","network", "set", self.name, "ipv4.nat", self.ipv4_nat])
         self.run(["lxc", "network", "set", self.name, "ipv4.address", self.ipv4_addr])
@@ -66,7 +66,7 @@ class Bridge:
     def delete(self):
         if len(self.used_by) == 0:
             if not self.is_default:
-                cmd = ["lxc","network","delete", self.name, "-q"]
+                cmd = ["lxc","network","delete", self.name]
                 self.run(cmd)
             else:
                 self.run(["lxc","network", "set", self.name, "ipv4.nat", "false"])
