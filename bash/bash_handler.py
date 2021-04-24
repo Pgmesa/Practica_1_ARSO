@@ -1,6 +1,7 @@
 import logging
 
 from dependencies.cli.cli import Cli
+from dependencies.cli.aux_classes import Command, Flag
 from dependencies.utils.decorators import timer
 import bash.repository.commands as commands_rep
 
@@ -11,101 +12,123 @@ import bash.repository.commands as commands_rep
 commands = {}
 # --------------------------------------------------------------------
 @timer
-def execute(args:list, flags:list):
+def execute(args:list):
     """Executes the commands of the program'"""
-    order = args[0]
-    command = commands[order]
-    args.pop(0)
-    command(*args, flg=flags)
+    for cmd_name, cmd in commands.items():
+        if cmd_name in args["cmd"]:
+            principal = args.pop("cmd").pop(cmd_name)
+            secundary = args
+            cmd(*principal, **secundary)
+            break
         
 # --------------------------------------------------------------------
 def config_cli() -> Cli:
     global commands
     cli = Cli()
     # Arguments
-    cmd = "crear"
+    cmd_name = "crear"
     msg = (
         "<void or integer between(1-5)> --> " + 
-        " creates and configures the number of servers especified\n " +
-        "          (if void, 2 servers are created). It also " + 
-        " initializes a load balancer and connects all vms with bridges"
+        "deploys a server platform\n           with the number " +
+        "of servers especified (if void, 2 servers are created). It\n " + 
+        "          also initializes a load balancer that acts as a bridge " +
+        "between the servers\n           and the clients. Everything is " +
+        "connected by 2 virtual bridges"
     )
-    cli.add_command(cmd, description=msg, extra_arg=True, 
+    crear = Command(cmd_name, description=msg, extra_arg=True, 
                                 choices=[1,2,3,4,5], default=2)
-    opt = "--name"
-    msg = ("<vm_names> allows to specify the " + 
-                "name of the vms, 's_' is given if void")
-    cli.commands[cmd].add_option(opt, description=msg, extra_arg=True, 
+    msg = ("<server_names> allows to specify the name of the servers, " + 
+           "\n                      by default 's_' is given to each server")
+    crear.add_option("--name", description=msg, extra_arg=True, 
                                         multi=True, mandatory=True)
-    commands[cmd] = commands_rep.crear
+    cli.add_command(crear)
+    commands[cmd_name] = commands_rep.crear
     
-    cmd = "arrancar"
-    msg = ("<void or vm_names> runs the virtual machines " + 
-                " specified (stopped or frozen)")
-    cli.add_command(cmd, description=msg, extra_arg=True, multi=True)
-    commands[cmd] = commands_rep.arrancar
+    cmd_name = "arrancar"
+    msg = ("<void or container_names> runs the containers specified, " +
+           "if void\n           all containers are runned")
+    arrancar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
+    cli.add_command(arrancar)
+    commands[cmd_name] = commands_rep.arrancar
     
-    cmd = "parar"
-    msg = "stops the virtual machines currently running"
-    cli.add_command(cmd, description=msg, extra_arg=True, multi=True)
-    commands[cmd] = commands_rep.parar
+    cmd_name = "parar"
+    msg = ("<void or container_names> stops the containers currently " +
+          "running,\n           if void all containers are stopped")
+    parar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
+    cli.add_command(parar)
+    commands[cmd_name] = commands_rep.parar
     
-    cmd = "destruir"
-    msg = ("deletes every virtual machine created " +
-                "and all connections betweeen them")
-    cli.add_command(cmd, description=msg)
-    commands[cmd] = commands_rep.destruir
+    cmd_name = "destruir"
+    msg = ("deletes every component of the platform created")
+    destruir = Command(cmd_name, description=msg)
+    cli.add_command(destruir)
+    commands[cmd_name] = commands_rep.destruir
     
     # Other functionalities
-    cmd = "pausar"
-    msg = "pauses the virtual machines currently running"
-    cli.add_command(cmd, description=msg, extra_arg=True, multi=True)
-    commands[cmd] = commands_rep.pausar
+    cmd_name = "pausar"
+    msg = ("<void or container_names> paises the containers currently " +
+          "running,\n           if void all containers are stopped")
+    pausar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
+    cli.add_command(pausar)
+    commands[cmd_name] = commands_rep.pausar
 
-    cmd = "añadir"
-    msg = ("<integer between(1-4)> adds the number of servers" +
-                " specified (the program can't surpass 5 servers)")
-    cli.add_command(cmd, description=msg, extra_arg=True, 
+    cmd_name = "añadir"
+    msg = ("<integer between(1-4)> adds the number of servers specified " +
+           " (the\n           program can't surpass 5 servers)")
+    añadir = Command(cmd_name, description=msg, extra_arg=True, 
                                 choices=[1,2,3,4], mandatory=True)
-    opt = "--name"
-    msg = ("<vm_names> allows to specify the name " +
-                " of the vms, 's_' is given if void")
-    cli.commands[cmd].add_option(opt, description=msg, extra_arg=True, 
+    
+    msg = ("<server_names> allows to specify the name of the servers, " + 
+           "\n                      by default 's_' is given to each server")
+    añadir.add_option("--name", description=msg, extra_arg=True, 
                                         multi=True, mandatory=True)
-    commands[cmd] = commands_rep.añadir
+    cli.add_command(añadir)
+    commands[cmd_name] = commands_rep.añadir
     
-    cmd = "eliminar"
-    msg = "<vm_names> deletes the vms specified"
-    cli.add_command(cmd, description=msg, extra_arg=True,  multi=True)
-    commands[cmd] = commands_rep.eliminar
+    cmd_name = "eliminar"
+    msg = ("<void or server_names> deletes the containers specified, if void " +
+          "\n           all servers are deleted")
+    eliminar = Command(cmd_name, description=msg, extra_arg=True,  multi=True)
+    cli.add_command(eliminar)
+    commands[cmd_name] = commands_rep.eliminar
     
-    cmd = "show"
-    msg = ("<diagram or state> shows information about " + 
-                "the pupose of the program and it's current state")
-    cli.add_command(cmd, description=msg, extra_arg=True, 
-                            choices=["diagram", "state"], mandatory=True)
-    commands[cmd] = commands_rep.show
+    cmd_name = "show"
+    msg = ("<diagram or state> shows information about the program. 'state' " + 
+          "shows\n           information about every machine/component of " +
+          "the platform and 'diagram'\n           displays a diagram that " +
+          "explains the structure of the platform")
+    show = Command(cmd_name, description=msg, extra_arg=True, 
+                                mandatory=True, choices=["diagram", "state"])
+    cli.add_command(show)
+    commands[cmd_name] = commands_rep.show
     
-    cmd = "xterm"
-    msg = ("<void or vm_name> opens the terminal the vms " + 
-                "specified or all of them if no name is given")
-    cli.add_command(cmd, description=msg, extra_arg=True, multi=True)
-    commands[cmd] = commands_rep.xterm
+    cmd_name = "term"
+    msg = ("<void or container_names> opens the terminal of the containers " + 
+           "\n           specified or all of them if no name is given")
+    term = Command(cmd_name, description=msg, extra_arg=True, multi=True)
+    cli.add_command(term)
+    commands[cmd_name] = commands_rep.term
     
     #Flags/Options
     msg = "shows information about every process that is being executed"
-    cli.add_flag("-v", notCompatibleWithFlags=["-d"], description=msg)
+    verbosity = Flag("-v", notCompatibleWithFlags=["-d"], description=msg)
+    cli.add_flag(verbosity)
     msg = "option for debugging"
-    cli.add_flag("-d", notCompatibleWithFlags=["-v"], description=msg)
+    debugging = Flag("-d", notCompatibleWithFlags=["-v"], description=msg)
+    cli.add_flag(debugging)
     msg = ("'quiet mode', doesn't show any msg " + 
             "during execution (only when an error occurs)")
-    cli.add_flag("-q", notCompatibleWithFlags=["-v","-d"], description=msg)
+    quiet = Flag("-q", notCompatibleWithFlags=["-v","-d"], description=msg)
+    cli.add_flag(quiet)
     msg = "executes the action without asking confirmation"
-    cli.add_flag("-f", description=msg)
-    msg = "opens the terminal window of the vms that are being started"
-    cli.add_flag("-t", description=msg)
+    force = Flag("-f", description=msg)
+    cli.add_flag(force)
+    msg = "opens the terminal window of the containers that are being runned"
+    terminal = Flag("-t", description=msg)
+    cli.add_flag(terminal)
     msg = "launches the container"
-    cli.add_flag("-l", description=msg)
+    launch = Flag("-l", description=msg)
+    cli.add_flag(launch)
     return cli
 
 # --------------------------------------------------------------------

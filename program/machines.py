@@ -12,18 +12,17 @@ SERVER = "server"; LB = "load balancer"; CLIENT  = "client"
 
 # Imagen a utilizar
 image = "ubuntu1804"
+#image = "apache"
 
-def serialize_containers(*servers, servs=True) -> list:
-    lb = Container("lb", image, tag=LB)
-    client = Container("client", image, tag=CLIENT)
-    cs = [lb, client]
-    if servs:
-        cs += serialize_servers(*servers)
-    return cs
+def get_loadbalancer() -> list:
+    return Container("lb", image, tag=LB)
 
-def serialize_servers(*servers):
+def get_clients():
+    return Container("cl", image, tag=CLIENT)
+
+def serialize_servers(num, *names):
     servs = []
-    server_names = process_names(containers.ID, *servers)
+    server_names = process_names(containers.ID, num, *names)
     for name in server_names:
         servs.append(Container(name, image, tag=SERVER))
     return servs
@@ -40,31 +39,27 @@ def serialize_bridges(numBridges:int) -> list:
         bgs.append(b)
     return bgs
 
-def process_names(register_id, *servers):
+def process_names(register_id, num, *names):
     server_names = []
-    if len(servers) == 0: return []
     j = 1
     machine_names = objectlist_as_dict(
         register.load(register_id), 
         key_attribute="name"
     )
-    if type(servers[0]) == int:
-        numServs = servers[0]
-        for i in range(numServs):
-            try:
-                name = servers[i+1] 
-            except:
-                # Si no nos han proporcionado nombre, 
-                # buscamos uno que no exista ya
+    if machine_names == None:
+        machine_names = []
+    for i in range(num):
+        try:
+            name = names[i] 
+        except:
+            # Si no nos han proporcionado mas nombres, buscamos
+            # uno que no exista ya o no nos hayan pasado antes
+            name = f"s{j}"
+            j += 1
+            while (name in server_names or 
+                     name in machine_names):   
                 name = f"s{j}"
-                if machine_names != None:
-                    while name in machine_names:
-                        j += 1   
-                        name = f"s{j}"
                 j += 1
-            server_names.append(name)
-    else:
-        for name in servers: 
-            server_names.append(name)
+        server_names.append(name)
     return server_names
 # --------------------------------------------------------------------

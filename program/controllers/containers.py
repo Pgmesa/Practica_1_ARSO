@@ -141,7 +141,7 @@ def update_container(c_to_update:Container, remove:bool=False):
 def add_container(c_to_add:Container):
     cs = register.load(register_id=ID)
     if cs == None:
-        register.add(ID, c_to_add)
+        register.add(ID, [c_to_add])
     else:
         register.update(ID, c_to_add, override=False)
     

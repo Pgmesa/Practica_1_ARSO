@@ -10,7 +10,7 @@ def target_containers(logger=None):
     if logging == None:
         logger = logging.getLogger(__name__)
     def _target_containers(cmd):
-        def get_targets(*args, **flags):
+        def get_targets(*args, **kargs):
             cs = register.load(containers.ID)
             if cs == None:
                 msg = " No existen contenedores creados por el programa"
@@ -32,7 +32,7 @@ def target_containers(logger=None):
                 logger.error(f" No existe el contenedor '{wrong}' en este programa")
             # En caso de que haya algun contenedor valido
             if len(target_cs) != 0:
-                cmd(*target_cs, **flags)
+                cmd(*target_cs, **kargs)
         return get_targets
     return _target_containers
 

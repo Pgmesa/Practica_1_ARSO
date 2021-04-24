@@ -58,7 +58,7 @@ def update_bridge(b_to_update:Bridge, remove=False):
 def add_bridge(b_to_add:Bridge):
     cs = register.load(register_id=ID)
     if cs == None:
-        register.add(ID, b_to_add)
+        register.add(ID, [b_to_add])
     else:
         register.update(ID, b_to_add, override=False)
         

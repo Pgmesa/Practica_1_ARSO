@@ -80,7 +80,7 @@ def print_state():
         for c in cs:
             print(pretty(c))
     else:
-        print("No virtual machines created by the program")
+        print("No containers created by the program")
     print("BRIDGES")
     if bgs != None:       
         for b in bgs:

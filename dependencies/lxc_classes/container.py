@@ -53,7 +53,7 @@ class Container:
                                 "y no puede ser inicializado de nuevo")
         self.run(["lxc", "init", self.container_image, self.name])  
         self.state = STOPPED
-        # Limiting the resources of the vms created
+        # Limiting the resources of the containers created
         self.run(["lxc", "config", "set", self.name, "limits.cpu.allowance", "40ms/200ms"])
         self.run(["lxc", "config", "set", self.name, "limits.memory", "1024MB"]) 
         self.run(["lxc", "config", "set", self.name, "limits.cpu", "2"])
@@ -69,7 +69,7 @@ class Container:
         if self.state != RUNNING and self.state != FROZEN:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser detenido")
-        self.run(["lxc", "stop", self.name])  
+        self.run(["lxc", "stop", self.name, "--force"])  
         self.state = STOPPED
         
     def delete(self):
