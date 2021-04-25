@@ -6,7 +6,6 @@ import subprocess
 from time import sleep
 from functools import reduce
 
-
 import program.controllers.bridges as bridges
 import program.controllers.containers as containers
 import program.machines as machines
@@ -37,10 +36,10 @@ def connect_machines():
         # Si ya se ha conectado continuamos con la siguiente
         if len(c.networks) > 0: continue
         bridges_to_connect = []
-        if c.tag == machines.SERVER or c.tag == machines.LB:
+        if c.tag == "server" or c.tag == "load balancer":
             if "lxdbr0" in bgs:
                 bridges_to_connect.append(bgs['lxdbr0'])
-        if c.tag == machines.CLIENT or c.tag == machines.LB:
+        if c.tag == "client" or c.tag == "load balancer":
             if "lxdbr1" in bgs:
                 bridges_to_connect.append(bgs['lxdbr1'])
         for b in bridges_to_connect:

@@ -35,7 +35,7 @@ def main():
         except KeyboardInterrupt:
             main_logger.warning(" Programa interrumpido")
         except ProgramError as err:
-            logging.critical(err)
+            main_logger.critical(err)
         except Exception as err:
             err_msg = " Error inesperado en el programa (no controlado)"
             main_logger.critical(err_msg)
