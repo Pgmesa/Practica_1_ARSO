@@ -11,18 +11,15 @@ from dependencies.lxc_classes.bridge import Bridge
 # Tags of the containers available in this program
 SERVER = "server"; LB = "load balancer"; CLIENT  = "client"
 
-image = "ubuntu1804"
+default_image = "ubuntu:18.04"
 
-def get_loadbalancer() -> list:
-    #image = program.get_containers_image()
+def get_loadbalancer(image=default_image) -> list:
     return Container("lb", image, tag=LB)
 
-def get_clients():
-    #image = program.get_containers_image()
+def get_clients(image=default_image):
     return Container("cl", image, tag=CLIENT)
 
-def serialize_servers(num, *names):
-    #image = program.get_containers_image()
+def serialize_servers(num, *names, image=default_image):
     servs = []
     server_names = process_names(containers.ID, num, *names)
     for name in server_names:

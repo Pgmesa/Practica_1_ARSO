@@ -111,8 +111,20 @@ def crear(numServs, options={}, flags=[]):
     bgs_s = concat_array(succesful_bgs)
     cmd_logger.info(f" Bridges '{bgs_s}' creados\n")
     # Creando contenedores
-    lb = machines.get_loadbalancer()
-    cl = machines.get_clients()
+        # Elegimos la imagen con la que se van a crear
+    lbimage = machines.default_image
+    climage = machines.default_image
+    if "--image" in options:
+        climage = options["--image"][0]
+        lbimage = options["--image"][0]
+    if "--climage" in options:
+        climage = options["--climage"][0]
+    if "--lbimage" in options:
+        lbimage = options["--lbimage"][0]
+    cmd_logger.debug(f" Creando cliente con imagen '{climage}'")
+    cmd_logger.debug(f" Creando lb con imagen '{lbimage}'")
+    lb = machines.get_loadbalancer(image=lbimage)
+    cl = machines.get_clients(image=climage)
     añadir(numServs, options=options, flags=flags, extra_cs=[lb,cl]) 
     cmd_logger.info(" Plataforma de servidores desplegada")
 
@@ -135,11 +147,25 @@ def añadir(numServs, options={}, flags=[] , extra_cs=[]):
             cmd_logger.error(msg)
             return
     # Creando contenedores 
+        # Elegimos la imagen con la que se van a crear
+    simage = machines.default_image
+    if "--image" in options:
+        simage = options["--image"][0]
+    if "--simage" in options:
+        simage = options["--simage"][0]
+    cmd_logger.debug(f" Creando servidores con imagen '{simage}'")
     if "--name" in options:   
         names = options["--name"]
-        cs = extra_cs + machines.serialize_servers(numServs, *names)
+        cs = extra_cs + machines.serialize_servers(
+            numServs, 
+            *names, 
+            image=simage
+        )
     else:
-        cs = extra_cs + machines.serialize_servers(numServs)
+        cs = extra_cs + machines.serialize_servers(
+            numServs,
+            image=simage
+        )
     cs_s = concat_array(cs)
     msg = f" Nombre de contenedores serializados --> '{cs_s}'"
     cmd_logger.debug(msg)

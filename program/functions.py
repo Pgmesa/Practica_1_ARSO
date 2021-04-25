@@ -17,39 +17,6 @@ class ProgramError(Exception):
 
 program_logger = logging.getLogger(__name__)
 # --------------------------------------------------------------------
-# def get_containers_image():
-#     rel_path = "/program/resources/container_images/ubuntu1804.tar.gz"
-#     image_path =  os.getcwd() + rel_path
-#     fingerprint = "80afef8582a9"
-#     alias = "pfinal1_image"
-#     process = subprocess.run(
-#         ["lxc", "image", "list"],
-#         stdout=subprocess.PIPE
-#         )
-#     table = process.stdout.decode()
-#     if fingerprint not in table:
-#         msg = " La imagen para los contenedores no existe en este PC"
-#         program_logger.info(msg)
-#         program_logger.info(f" Importando la imagen '{fingerprint}'...")
-#         i = 1
-#         while alias in table:
-#            alias = f"pfinal1_image_{i}"
-#            i += 1
-#         process = subprocess.run(
-#             ["lxc", "image", "import", image_path, "--alias", alias],
-#             stdout=subprocess.PIPE,
-#             stderr=subprocess.PIPE
-#         )
-#         if process.returncode != 0:
-#             err_msg = " No se ha podido importar la imagen de los contenedores\n"
-#             err_msg += "Mensaje de lxc -> " + process.stderr.decode()
-#             raise ProgramError(err_msg)
-#         else:
-#             msg = f" Imagen '{fingerprint}' con alias '{alias}' importada con exito\n"
-#             program_logger.info(msg)
-#     return fingerprint
-
-# --------------------------------------------------------------------
 def connect_machines():
     # Si no hay puentes a los que conectar salimos
     bgs = objectlist_as_dict(

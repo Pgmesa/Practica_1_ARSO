@@ -1,6 +1,7 @@
 # Integrantes del grupo: Pablo García Mesa, Santiago González Gómez, Fernando Fernández Martín
 import sys
 import logging
+import subprocess
 
 import bash.bash_handler as bash
 from program.functions import ProgramError
@@ -24,7 +25,10 @@ def main():
         bash.config_verbosity(args_processed["flags"])
         main_logger.info(" Programa iniciado")
         try:
+        # Inicializamos lxd y ejecutamos
+            subprocess.run(["lxd", "init", "--auto"])
             bash.execute(args_processed)
+        # Manejamos los errores que puedan surgir 
         except KeyboardInterrupt:
             main_logger.warning(" Programa interrumpido")
         except ProgramError as err:

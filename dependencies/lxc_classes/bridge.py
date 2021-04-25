@@ -10,7 +10,7 @@ class Bridge:
                  ethernet:str,
                  ipv4_nat:bool=False, ipv4_addr:str=None,
                  ipv6_nat:bool=False, ipv6_addr:str=None):
-        self.name = name
+        self.name = str(name)
         if self.name == "lxdbr0":
             self.is_default = True
         else:
@@ -45,7 +45,7 @@ class Bridge:
         outcome = process.returncode
         if outcome != 0:
             err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
-                            "Mensaje de error de subprocess: ->")
+                            "Mensaje de error de lxc: ->")
             err_msg += process.stderr.decode().strip()[6:]
             raise LxcNetworkError(err_msg)
     

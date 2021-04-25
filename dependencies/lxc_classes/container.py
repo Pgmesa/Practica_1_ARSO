@@ -14,7 +14,7 @@ class LxcError(Exception):
 class Container:
     
     def __init__(self, name:str, container_image:str, tag:str=""):
-        self.name = name
+        self.name = str(name)
         self.container_image = container_image
         self.state = NOT_INIT
         self.tag = tag
@@ -29,7 +29,7 @@ class Container:
         outcome = process.returncode
         if outcome != 0:
             err_msg = (f" Fallo al ejecutar el comando {cmd}.\n" +
-                            "Mensaje de error de subprocess: ->")
+                            "Mensaje de error de lxc: ->")
             err_msg += process.stderr.decode().strip()[6:]
             raise LxcError(err_msg)    
         

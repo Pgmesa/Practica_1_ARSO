@@ -41,6 +41,15 @@ def config_cli() -> Cli:
            "\n                      by default 's_' is given to each server")
     crear.add_option("--name", description=msg, extra_arg=True, 
                                         multi=True, mandatory=True)
+    msg = ("<alias or fingerprint> allows to specify the image of the " +
+           "containers,\n                      by default ubuntu:18.04 is used")
+    crear.add_option("--image", description=msg, extra_arg=True, mandatory=True)
+    msg ="<alias or fingerprint> allows to specify the image of the servers"
+    crear.add_option("--simage", description=msg, extra_arg=True, mandatory=True)
+    msg = "<alias or fingerprint> allows to specify the image of the load balancer"
+    crear.add_option("--climage", description=msg, extra_arg=True, mandatory=True)
+    msg = "<alias or fingerprint> allows to specify the image of the client"
+    crear.add_option("--lbimage", description=msg, extra_arg=True, mandatory=True)
     cli.add_command(crear)
     commands[cmd_name] = commands_rep.crear
     
@@ -77,11 +86,12 @@ def config_cli() -> Cli:
            " (the\n           program can't surpass 5 servers)")
     añadir = Command(cmd_name, description=msg, extra_arg=True, 
                                 choices=[1,2,3,4,5], mandatory=True)
-    
     msg = ("<server_names> allows to specify the name of the servers, " + 
            "\n                      by default 's_' is given to each server")
     añadir.add_option("--name", description=msg, extra_arg=True, 
                                         multi=True, mandatory=True)
+    msg ="<alias or fingerprint> allows to specify the image of the servers"
+    añadir.add_option("--simage", description=msg, extra_arg=True, mandatory=True)
     cli.add_command(añadir)
     commands[cmd_name] = commands_rep.añadir
     
