@@ -4,6 +4,7 @@ import logging
 import subprocess
 
 import bash.bash_handler as bash
+import program.functions as program
 from program.functions import ProgramError
 from dependencies.cli.aux_classes import CmdLineError
     
@@ -22,10 +23,12 @@ def main():
     except CmdLineError as clErr:
         main_logger.error(f" {clErr}")
     else:
-        bash.config_verbosity(args_processed["flags"])
-        main_logger.info(" Programa iniciado")
         try:
-        # Inicializamos lxd y ejecutamos
+            bash.config_verbosity(args_processed["flags"])
+            main_logger.info(" Programa iniciado")
+            # Realizamos unas comprobaciones previas
+            program.check_enviroment()
+            # Inicializamos lxd y ejecutamos
             subprocess.run(["lxd", "init", "--auto"])
             bash.execute(args_processed)
         # Manejamos los errores que puedan surgir 
@@ -39,7 +42,8 @@ def main():
             answer = input("¿Obtener traza completa?(y/n): ")
             if answer.lower() == "y":
                 main_logger.exception(err)
-        main_logger.info(" Programa finalizado")  
+        finally:
+            main_logger.info(" Programa finalizado")
         
 if __name__ == "__main__":
     main()

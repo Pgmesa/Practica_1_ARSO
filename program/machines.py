@@ -13,13 +13,13 @@ SERVER = "server"; LB = "load balancer"; CLIENT  = "client"
 
 default_image = "ubuntu:18.04"
 
-def get_loadbalancer(image=default_image) -> list:
+def get_loadbalancer(image=default_image) -> Container:
     return Container("lb", image, tag=LB)
 
-def get_clients(image=default_image):
+def get_clients(image=default_image) -> Container:
     return Container("cl", image, tag=CLIENT)
 
-def serialize_servers(num, *names, image=default_image):
+def serialize_servers(num, *names, image=default_image) -> list:
     servs = []
     server_names = process_names(containers.ID, num, *names)
     for name in server_names:
@@ -38,7 +38,7 @@ def serialize_bridges(numBridges:int) -> list:
         bgs.append(b)
     return bgs
 
-def process_names(register_id, num, *names):
+def process_names(register_id, num, *names) -> list:
     server_names = []
     j = 1
     machine_names = objectlist_as_dict(

@@ -1,6 +1,7 @@
 
 import os
 import logging
+import platform
 import subprocess
 from time import sleep
 from functools import reduce
@@ -97,8 +98,26 @@ def show_diagram():
         ["display", "program/resources/images/diagram.png"],
         stdout=subprocess.PIPE
     ) 
-
 # --------------------------------------------------------------------   
+  
+def check_enviroment():
+    system = platform.system()
+    program_logger.debug(f" {system} OS detected")
+    if system != "Linux":
+        err = f" This program only works on Linux -> {system} OS detected"
+        raise ProgramError(err)
+    try:
+        subprocess.run(
+            ["lxd", "--version"],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE
+        )
+    except:
+        err = (" 'lxd' is not installed in this computer and it's necessary " +
+               "for the execution of this program.\nEnter 'sudo apt " +
+               "install lxd' in the commands terminal for installing it.")
+        raise ProgramError(err)
+  
 def lxc_list():
     cs = register.load(containers.ID)
     program_logger.info(" Cargando resultados...")

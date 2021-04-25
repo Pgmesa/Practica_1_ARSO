@@ -90,7 +90,8 @@ class Cli:
                     return extra_args
                 raise CmdLineError(f"El parametro extra '{args[0]}' no es valido")
             else:
-                raise CmdLineError(f"El comando '{cmd.name}' no admite parametros extra")
+                err_msg = f"El comando '{cmd.name}' no admite parametros extra {args}"
+                raise CmdLineError(err_msg)
         elif not cmd.default == None:
             return [cmd.default]
         elif not cmd.mandatory:
