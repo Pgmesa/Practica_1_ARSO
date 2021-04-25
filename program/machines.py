@@ -2,6 +2,7 @@
 import dependencies.register.register as register
 import program.controllers.bridges as bridges
 import program.controllers.containers as containers
+import program.functions as program
 from dependencies.utils.tools import pretty, objectlist_as_dict
 from dependencies.lxc_classes.container import Container
 from dependencies.lxc_classes.bridge import Bridge
@@ -10,17 +11,18 @@ from dependencies.lxc_classes.bridge import Bridge
 # Tags of the containers available in this program
 SERVER = "server"; LB = "load balancer"; CLIENT  = "client"
 
-# Imagen a utilizar
 image = "ubuntu1804"
-#image = "apache"
 
 def get_loadbalancer() -> list:
+    #image = program.get_containers_image()
     return Container("lb", image, tag=LB)
 
 def get_clients():
+    #image = program.get_containers_image()
     return Container("cl", image, tag=CLIENT)
 
 def serialize_servers(num, *names):
+    #image = program.get_containers_image()
     servs = []
     server_names = process_names(containers.ID, num, *names)
     for name in server_names:

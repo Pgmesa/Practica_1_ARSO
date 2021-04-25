@@ -3,6 +3,7 @@ import sys
 import logging
 
 import bash.bash_handler as bash
+from program.functions import ProgramError
 from dependencies.cli.aux_classes import CmdLineError
     
 # ----------------- MAIN (BEGGINING OF EXECUTION) --------------------
@@ -26,9 +27,11 @@ def main():
             bash.execute(args_processed)
         except KeyboardInterrupt:
             main_logger.warning(" Programa interrumpido")
+        except ProgramError as err:
+            logging.critical(err)
         except Exception as err:
             err_msg = " Error inesperado en el programa (no controlado)"
-            main_logger.error(err_msg)
+            main_logger.critical(err_msg)
             answer = input("¿Obtener traza completa?(y/n): ")
             if answer.lower() == "y":
                 main_logger.exception(err)

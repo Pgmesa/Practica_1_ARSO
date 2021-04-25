@@ -125,12 +125,15 @@ def añadir(numServs, options={}, flags=[] , extra_cs=[]):
         cmd_logger.error(msg)
         return
     existent_cs = register.load(containers.ID)
-    if existent_cs != None and len(existent_cs) + numServs > 5: 
-        msg = (f" La plataforma no admite mas de 5 servidores. " +
-                f"Actualmente existen {len(existent_cs)}, no se " +
-                        f" pueden añadir {numServs} mas")
-        cmd_logger.error(msg)
-        return
+    if existent_cs != None:
+        ex_s = filter(lambda cs: cs.tag == machines.SERVER, existent_cs)
+        num = len(list(ex_s))
+        if num + numServs > 5: 
+            msg = (f" La plataforma no admite mas de 5 servidores. " +
+                    f"Actualmente existen {num}, no se " +
+                            f"puede añadir {numServs} mas")
+            cmd_logger.error(msg)
+            return
     # Creando contenedores 
     if "--name" in options:   
         names = options["--name"]
@@ -181,7 +184,7 @@ def destruir(options={}, flags=[]):
     # Eliminamos contenedores
     cs = register.load(containers.ID)
     if cs == None:
-        cmd_logger.warning(" No existen servidores en el programa\n")
+        cmd_logger.warning(" No existen contenedores en el programa\n")
     else:
         c_names = list(map(lambda c: c.name, cs))
         flags.append("-f") # Añadimos el flag -f

@@ -66,17 +66,17 @@ def config_cli() -> Cli:
     
     # Other functionalities
     cmd_name = "pausar"
-    msg = ("<void or container_names> paises the containers currently " +
+    msg = ("<void or container_names> pauses the containers currently " +
           "running,\n           if void all containers are stopped")
     pausar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
     cli.add_command(pausar)
     commands[cmd_name] = commands_rep.pausar
 
     cmd_name = "añadir"
-    msg = ("<integer between(1-4)> adds the number of servers specified " +
+    msg = ("<integer between(1-5)> adds the number of servers specified " +
            " (the\n           program can't surpass 5 servers)")
     añadir = Command(cmd_name, description=msg, extra_arg=True, 
-                                choices=[1,2,3,4], mandatory=True)
+                                choices=[1,2,3,4,5], mandatory=True)
     
     msg = ("<server_names> allows to specify the name of the servers, " + 
            "\n                      by default 's_' is given to each server")
@@ -86,7 +86,7 @@ def config_cli() -> Cli:
     commands[cmd_name] = commands_rep.añadir
     
     cmd_name = "eliminar"
-    msg = ("<void or server_names> deletes the containers specified, if void " +
+    msg = ("<void or server_names> deletes the servers specified, if void " +
           "\n           all servers are deleted")
     eliminar = Command(cmd_name, description=msg, extra_arg=True,  multi=True)
     cli.add_command(eliminar)
