@@ -8,7 +8,6 @@ from functools import reduce
 
 import program.controllers.bridges as bridges
 import program.controllers.containers as containers
-import program.machines as machines
 import dependencies.register.register as register
 from dependencies.utils.tools import pretty, objectlist_as_dict
 
