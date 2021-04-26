@@ -28,8 +28,7 @@ def main():
             main_logger.info(" Programa iniciado")
             # Realizamos unas comprobaciones previas
             program.check_enviroment()
-            # Inicializamos lxd y ejecutamos
-            subprocess.run(["lxd", "init", "--auto"])
+            main_logger.debug(f" Ejecutando la orden {args_processed}")
             bash.execute(args_processed)
         # Manejamos los errores que puedan surgir 
         except KeyboardInterrupt:

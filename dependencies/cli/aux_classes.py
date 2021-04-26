@@ -1,11 +1,4 @@
 
-class CmdLineError(Exception):
-    def __init__(self, msg:str, _help=True):
-        hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
-        if _help: 
-            msg += hlpm
-        super().__init__(msg)
-
 class Command:
     def __init__(self, name:str, extra_arg:any=False, mandatory=False, multi=False,
                     choices:list=None, default:any=None, description:str=None):

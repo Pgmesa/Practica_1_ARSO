@@ -2,10 +2,9 @@
 import logging
 
 import bash.repository.commands as commands_rep
-from dependencies.cli.cli import Cli
-from dependencies.cli.aux_classes import Command, Flag, CmdLineError
+from dependencies.cli.cli import Cli, CmdLineError
+from dependencies.cli.aux_classes import Command, Flag
 from dependencies.utils.decorators import timer
-
 
 # ----------------------------BASH HANDLER----------------------------
 # --------------------------------------------------------------------

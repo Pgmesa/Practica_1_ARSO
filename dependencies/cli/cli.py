@@ -1,6 +1,13 @@
 
-from .aux_classes import Command, Flag,  CmdLineError
+from .aux_classes import Command, Flag
 
+
+class CmdLineError(Exception):
+    def __init__(self, msg:str, _help=True):
+        hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
+        if _help: 
+            msg += hlpm
+        super().__init__(msg)
 
 # ------- Command Line Interface
 class Cli:
@@ -20,23 +27,7 @@ class Cli:
         if "-h" in args: 
             self.printHelp()
             return None
-
-        inFlags = []
-        # Miramos a ver si alguno de los flags validos esta en la linea de comandos introducida
-        for arg in args:
-            for validFlag in self.flags.values():
-                if arg == validFlag.name:
-                    if len(inFlags) > 0:
-                        # Comprobamos que son flags compatibles
-                        for flag in inFlags:
-                            if flag.name in validFlag.ncwf or validFlag.name in flag.ncwf:
-                                errmsg = f"Las opciones '{flag}' y '{validFlag}' no son compatibles"
-                                raise CmdLineError(errmsg)
-                    inFlags.append(validFlag)
-        # Eliminamos los flags ya procesadas de la linea de comandos  
-        for flag in inFlags: args.remove(flag.name)
-        # Guardamos los nombres de los flags en vez del objeto Flag entero (ya no nos hace falta)
-        inFlags = list(map(lambda flag: str(flag), inFlags))
+        inFlags = self.check_flags(args)
         # Revisamos si alguno de los comandos validos esta en la linea de comandos introducida
         for cmd in self.commands.values():
             if len(args) == 0:
@@ -98,6 +89,25 @@ class Cli:
             return []
         else:
             raise CmdLineError(f"El comando '{cmd.name}' requiere un parametro extra")
+    
+    def check_flags(self, args):
+        inFlags = []
+        # Miramos a ver si alguno de los flags validos esta en la linea de comandos introducida
+        for arg in args:
+            for validFlag in self.flags.values():
+                if arg == validFlag.name:
+                    if len(inFlags) > 0:
+                        # Comprobamos que son flags compatibles
+                        for flag in inFlags:
+                            if flag.name in validFlag.ncwf or validFlag.name in flag.ncwf:
+                                errmsg = f"Las opciones '{flag}' y '{validFlag}' no son compatibles"
+                                raise CmdLineError(errmsg)
+                    inFlags.append(validFlag)
+        # Eliminamos los flags ya procesadas de la linea de comandos  
+        for flag in inFlags: args.remove(flag.name)
+        # Guardamos los nombres de los flags en vez del objeto Flag entero (ya no nos hace falta)
+        inFlags = list(map(lambda flag: str(flag), inFlags))
+        return inFlags
     
     def printHelp(self):
         print(" python3 __main__ [commands] <options> <flags>")

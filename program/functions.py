@@ -137,7 +137,16 @@ def check_enviroment():
               "functionalities may require this module, please enter " +
               "'sudo apt install xterm' for installing it")
         program_logger.warning(warn)
-        
+    # Inicializamos lxd y ejecutamos si no existe el profile default
+    process = subprocess.run(
+        ["lxc", "profile", "list"],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE
+    )
+    if "default" not in process.stdout.decode():
+        program_logger.info(" Inicializando lxd...")
+        subprocess.run(["lxd", "init", "--auto"])
+        program_logger.info(" lxd inicializado...")
   
 def lxc_list():
     cs = register.load(containers.ID)
