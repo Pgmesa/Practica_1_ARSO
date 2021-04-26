@@ -1,11 +1,11 @@
 
-import dependencies.register.register as register
+
 import program.controllers.bridges as bridges
 import program.controllers.containers as containers
-import program.functions as program
-from dependencies.utils.tools import pretty, objectlist_as_dict
+import dependencies.register.register as register
 from dependencies.lxc_classes.container import Container
 from dependencies.lxc_classes.bridge import Bridge
+from dependencies.utils.tools import objectlist_as_dict
 
 # --------------------------------------------------------------------
 # Tags of the containers available in this program

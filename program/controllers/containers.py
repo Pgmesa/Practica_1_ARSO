@@ -6,9 +6,9 @@ from os import remove
 from contextlib import suppress
 
 import dependencies.register.register as register
-from dependencies.utils.tools import objectlist_as_dict
 from dependencies.utils.decorators import catch_foreach
 from dependencies.lxc_classes.container import Container, LxcError
+
 
 ID = "containers"
 cs_logger = logging.getLogger(__name__)

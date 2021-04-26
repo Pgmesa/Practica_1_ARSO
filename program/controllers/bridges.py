@@ -5,6 +5,7 @@ import dependencies.register.register as register
 from dependencies.utils.decorators import catch_foreach
 from dependencies.lxc_classes.bridge import Bridge, LxcNetworkError
 
+
 # Id del registro
 ID = "bridges"
 bgs_logger = logging.getLogger(__name__)

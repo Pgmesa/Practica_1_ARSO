@@ -1,9 +1,11 @@
+
 import logging
 
-from dependencies.cli.cli import Cli
-from dependencies.cli.aux_classes import Command, Flag
-from dependencies.utils.decorators import timer
 import bash.repository.commands as commands_rep
+from dependencies.cli.cli import Cli
+from dependencies.cli.aux_classes import Command, Flag, CmdLineError
+from dependencies.utils.decorators import timer
+
 
 # ----------------------------BASH HANDLER----------------------------
 # --------------------------------------------------------------------
@@ -103,12 +105,14 @@ def config_cli() -> Cli:
     commands[cmd_name] = commands_rep.eliminar
     
     cmd_name = "show"
-    msg = ("<diagram or state> shows information about the program. 'state' " + 
-          "shows\n           information about every machine/component of " +
-          "the platform and 'diagram'\n           displays a diagram that " +
-          "explains the structure of the platform")
+    msg = ("<diagram, state or files> shows information about the program. " + 
+          "'state' shows\n           information about every machine/component " +
+          "of the platform, 'diagram' displays \n           a diagram that " +
+          "explains the structure of the platform and 'files' shows the " + 
+          "files \n           structure of the code and the external " +
+          "dependencies of the program")
     show = Command(cmd_name, description=msg, extra_arg=True, 
-                                mandatory=True, choices=["diagram", "state"])
+                            mandatory=True, choices=["diagram", "state", "files"])
     cli.add_command(show)
     commands[cmd_name] = commands_rep.show
     

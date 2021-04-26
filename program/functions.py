@@ -11,6 +11,7 @@ import program.controllers.containers as containers
 import dependencies.register.register as register
 from dependencies.utils.tools import pretty, objectlist_as_dict
 
+
 class ProgramError(Exception):
     pass
 
@@ -93,9 +94,19 @@ def print_state():
         
 def show_diagram():
     subprocess.Popen(
-        ["display", "program/resources/images/diagram.png"],
+        ["display", "program/resources/diagram.png"],
         stdout=subprocess.PIPE
     ) 
+def show_files_structure():
+    subprocess.Popen(
+        ["display", "program/resources/files_structure.png"],
+        stdout=subprocess.PIPE
+    )
+    subprocess.Popen(
+        ["display", "program/resources/external_dependencies.png", "500x500"],
+        stdout=subprocess.PIPE
+    )
+    
 # --------------------------------------------------------------------   
   
 def check_enviroment():
@@ -115,6 +126,18 @@ def check_enviroment():
                "for the execution of this program.\nEnter 'sudo apt " +
                "install lxd' in the commands terminal for installing it.")
         raise ProgramError(err)
+    try:
+        subprocess.run(
+            ["xterm", "--version"],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE
+        )
+    except:
+        warn = (" xterm is not installed in this computer, and some " +
+              "functionalities may require this module, please enter " +
+              "'sudo apt install xterm' for installing it")
+        program_logger.warning(warn)
+        
   
 def lxc_list():
     cs = register.load(containers.ID)

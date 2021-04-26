@@ -4,10 +4,10 @@ import logging
 import subprocess
 
 import bash.bash_handler as bash
+from bash.bash_handler import CmdLineError
 import program.functions as program
 from program.functions import ProgramError
-from dependencies.cli.aux_classes import CmdLineError
-    
+ 
 # ----------------- MAIN (BEGGINING OF EXECUTION) --------------------
 # --------------------------------------------------------------------
 # This main file just defines the execution flow of the program

@@ -2,6 +2,7 @@
 import logging
 from contextlib import suppress
 
+from .reused_code import target_containers
 import program.controllers.bridges as bridges
 import program.controllers.containers as containers
 import program.machines as machines
@@ -9,7 +10,6 @@ import program.functions as program
 import dependencies.register.register as register
 from dependencies.utils.tools import objectlist_as_dict
 from dependencies.utils.tools import concat_array, remove_many
-from .reused_code import target_containers
 
 
 cmd_logger = logging.getLogger(__name__)
@@ -245,5 +245,7 @@ def show(choice, options={}, flags={}):
         program.show_diagram()
     elif choice == "state":
         program.print_state()
+    elif choice == "files":
+        program.show_files_structure()
         
 # --------------------------------------------------------------------
