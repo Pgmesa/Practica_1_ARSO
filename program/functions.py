@@ -103,12 +103,11 @@ def show_files_structure():
         stdout=subprocess.PIPE
     )
     subprocess.Popen(
-        ["display", "program/resources/external_dependencies.png", "500x500"],
+        ["display", "program/resources/external_dependencies.png"],
         stdout=subprocess.PIPE
     )
     
 # --------------------------------------------------------------------   
-  
 def check_enviroment():
     system = platform.system()
     program_logger.debug(f" {system} OS detected")
@@ -147,7 +146,14 @@ def check_enviroment():
         program_logger.info(" Inicializando lxd...")
         subprocess.run(["lxd", "init", "--auto"])
         program_logger.info(" lxd inicializado...")
-  
+
+def check_updates():
+    """Futura implementacion para detectar cambios que se hayan podido
+    producir en los contenedores y bridges desde fuera del programa
+    y actualizar las instancia guardadas en el registro"""
+    pass
+
+# --------------------------------------------------------------------  
 def lxc_list():
     cs = register.load(containers.ID)
     program_logger.info(" Cargando resultados...")

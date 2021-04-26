@@ -1,7 +1,9 @@
-
+# -------------------------------------------------------------------- 
 class Command:
-    def __init__(self, name:str, extra_arg:any=False, mandatory=False, multi=False,
-                    choices:list=None, default:any=None, description:str=None):
+
+    def __init__(self, name:str, extra_arg:any=False, mandatory=False,
+                 multi=False, choices:list=None, default:any=None,
+                 description:str=None):
         self.name = name
         self.extra_arg = extra_arg
         self.choices = choices
@@ -10,9 +12,10 @@ class Command:
         self.mandatory = mandatory
         self.multi = multi
         self.options = {}
-    
-    def add_option(self, name:str, extra_arg:any=False, mandatory=False, multi=False,
-                    choices:list=None, default:any=None, description:str=None):
+   
+    def add_option(self, name:str, extra_arg:any=False, mandatory=False, 
+                   multi=False, choices:list=None, default:any=None,
+                   description:str=None):
         self.options[name] = Command(
             name,
             extra_arg=extra_arg, 
@@ -22,10 +25,11 @@ class Command:
             default=default, 
             description=description
         )
-    
+     
     def __str__(self) -> str:
         return self.name 
     
+# --------------------------------------------------------------------     
 class Flag:
     def __init__(self, flag:str, notCompatibleWithFlags:list=[], 
                  description:str=None):

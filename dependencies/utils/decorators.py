@@ -2,6 +2,7 @@
 import logging
 from time import time
 
+# -------------------------------------------------------------------- 
 def timer(func):
     def f(*a, **ka):
         root_logger = logging.getLogger()
@@ -12,6 +13,7 @@ def timer(func):
             print(f"Elapsed time: {round(tf-t0, 2)} s")
     return f
 
+# -------------------------------------------------------------------- 
 def catch_foreach(logger=None):
     def _catch_foreach(func):
         def catch (*args, **optionals):
@@ -28,3 +30,5 @@ def catch_foreach(logger=None):
             return successful
         return catch
     return _catch_foreach
+
+# -------------------------------------------------------------------- 

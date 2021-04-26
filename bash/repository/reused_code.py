@@ -29,7 +29,8 @@ def target_containers(logger=None):
             # significa que no son validos. 
             remove_many(*c_dict.keys(), remove_in=names_given)
             for wrong in names_given:
-                logger.error(f" No existe el contenedor '{wrong}' en este programa")
+                err_msg = f" No existe el contenedor '{wrong}' en este programa"
+                logger.error(err_msg)
             # En caso de que haya algun contenedor valido
             if len(target_cs) != 0:
                 cmd(*target_cs, **kargs)

@@ -3,17 +3,19 @@ import os
 import pickle
 from contextlib import suppress
 
-
+# -------------------------------------------------------------------- 
 class RegisterError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
-        
+
+# --------------------------------------------------------------------         
 REL_PATH = ".register"
     
 def config_location(path, name=".register"):
     global REL_PATH
     REL_PATH = path+name
-    
+
+# --------------------------------------------------------------------    
 def add(register_id:any, obj:object):
     if not os.path.exists(REL_PATH):
         register = {}
@@ -28,10 +30,12 @@ def add(register_id:any, obj:object):
     with open(REL_PATH, "wb") as file:
             pickle.dump(register, file)
 
+# -------------------------------------------------------------------- 
 def update(register_id:any, obj:object, override:bool=True, dict_id:any=None):
     register = load()
     if register == None or register_id not in register:
-        raise RegisterError(f" id -> '{register_id}' was not found in the register")
+        err_msg = f" id -> '{register_id}' was not found in the register"
+        raise RegisterError(err_msg)
     if override == True:
         register[register_id] = obj
     else:
@@ -61,7 +65,8 @@ def update(register_id:any, obj:object, override:bool=True, dict_id:any=None):
             register[register_id] = array
     with open(REL_PATH, "wb") as file:
         pickle.dump(register, file)   
-    
+
+# --------------------------------------------------------------------     
 def load(register_id:any=None) -> object:
     try:
         with open(REL_PATH, "rb") as file:
@@ -76,10 +81,12 @@ def load(register_id:any=None) -> object:
     except FileNotFoundError:
         return None
 
+# -------------------------------------------------------------------- 
 def override(register):
     with open(REL_PATH, "wb") as file:
         pickle.dump(register, file)
-    
+
+# --------------------------------------------------------------------    
 def remove(register_id=None):
     if register_id != None:
         register = load()
@@ -95,20 +102,5 @@ def remove(register_id=None):
         if os.path.exists(REL_PATH): 
             os.remove(REL_PATH)
 
-# Faltaria añadir un metodo para actualizar valores concretos dentro de arrays, dict y set
+# -------------------------------------------------------------------- 
 
-# def search_obj(register_id:any, obj_prop:str, value:str) -> object:
-#     register = load()
-#     if register == None: return None
-#     iterable = register[register_id]
-#     try:
-#         iter(iterable)
-#         for obj in iterable:
-#             with suppress(Exception):
-#                 if getattr(obj, obj_prop) == value:
-#                     return obj
-#         else:
-#             return None
-#     except:
-#         return None
-    
