@@ -153,13 +153,14 @@ def check_updates():
     """Futura implementacion para detectar cambios que se hayan podido
     producir en los contenedores y bridges desde fuera del programa
     y actualizar las instancia guardadas en el registro"""
+    cs_object = register.load(containers.ID)
+    if cs_object is None: return
     process = subprocess.run(
         ["lxc", "list"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
     cs_info = lxclist_as_dict(process.stdout.decode())
-    cs_object = register.load(containers.ID)
     # Detecamos los cambios que se hayan producido fuera del programa
     # de los contenedores
     cs_updated = []
