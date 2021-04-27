@@ -1,10 +1,12 @@
 
 import os
+import re
 import logging
 import platform
 import subprocess
 from time import sleep
 from functools import reduce
+from math import floor
 
 import program.controllers.bridges as bridges
 import program.controllers.containers as containers
@@ -151,7 +153,46 @@ def check_updates():
     """Futura implementacion para detectar cambios que se hayan podido
     producir en los contenedores y bridges desde fuera del programa
     y actualizar las instancia guardadas en el registro"""
-    pass
+    process = subprocess.run(
+        ["lxc", "list"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    cs_info = lxclist_as_dict(process.stdout.decode())
+    cs_object = register.load(containers.ID)
+    # Detecamos los cambios que se hayan producido fuera del programa
+    # de los contenedores
+    cs_updated = []
+    for c in cs_object:
+        if c.name not in cs_info["NAME"]:
+            warn = (f" El contenedor {c.name} se ha eliminado fuera " +
+                    "del programa (informacion actualizada)")
+            program_logger.warning(warn)
+            continue
+        index = cs_info["NAME"].index(c.name)
+        if c.state != cs_info["STATE"][index]:
+            new_state = cs_info["STATE"][index]
+            warn = (f" El contenedor {c.name} se ha modificado fuera " +
+                   f"del programa, ha pasado de {c.state} a " + 
+                   f"{new_state} (informacion actualizada)")
+            c.state = new_state
+            program_logger.warning(warn)
+        if c.state == "RUNNING":
+            new = cs_info["IPV4"][index]
+            splitted = re.split(r"\(| |\)", new)
+            while "" in splitted:
+                splitted.remove("")
+            new_ipv4, new_eth = splitted
+            for eth, ip in c.networks.items():
+                if ip != new_ipv4:
+                    warn = (f" La ipv4 del contenedor {c.name} se ha " +
+                            f"modificado fuera del programa, ha pasado " + 
+                            f"de {ip}:{eth} a {new_ipv4}:{new_eth} " +
+                             "(informacion actualizada)")
+                    c.networks[new_eth] = new_ipv4
+                    program_logger.warning(warn)
+        cs_updated.append(c)
+    register.update(containers.ID, cs_updated)
 
 # --------------------------------------------------------------------  
 def lxc_list():
@@ -181,4 +222,39 @@ def lxc_list():
 def lxc_network_list():
     subprocess.call(["lxc", "network", "list"])
     
+def lxclist_as_dict(string:str):
+    info = {}
+    chars = list(string)
+    cells = -1
+    line_length = 0
+    cells_length = []
+    cell_start = 0
+    for i, c in enumerate(chars):
+        if c == "|":
+            break
+        line_length = 1 + i
+        if c == "+":
+            cells += 1
+            if cells > 0:
+                cells_length.append(line_length-1-cell_start)
+            cell_start = 1 + i
+            continue  
+    lines = len(chars)/line_length
+    rows = floor(lines/2)
+    
+    _start = line_length + 1
+    for i in range(cells):
+        if i != 0:
+            _start += cells_length[i-1] + 1
+        _end = _start + cells_length[i]
+        key = string[_start:_end].strip()
+        info[key] = []
+        for j in range(rows):
+            start = _start + line_length*(2*(j+1))
+            if start < len(chars):
+                end = start + cells_length[i]
+                value = string[start:end].strip()
+                info[key].append(value)
+    return info
+
 # --------------------------------------------------------------------
