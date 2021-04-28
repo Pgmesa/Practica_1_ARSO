@@ -134,7 +134,7 @@ def crear(numServs, options={}, flags=[]):
 # --------------------------------------------------------------------
 def añadir(numServs, options={}, flags=[] , extra_cs=[]):
     if register.load(bridges.ID) == None:
-        msg = (" La plataforma de servidores no ha sido  " +
+        msg = (" La plataforma de servidores no ha sido " +
                     "desplegada, se debe crear una nueva antes " +
                         "de añadir los servidores")
         cmd_logger.error(msg)

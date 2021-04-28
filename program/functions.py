@@ -150,20 +150,26 @@ def check_enviroment():
         program_logger.info(" lxd inicializado...")
 
 def check_updates():
-    """Futura implementacion para detectar cambios que se hayan podido
+    """Implementacion para detectar cambios que se hayan podido
     producir en los contenedores y bridges desde fuera del programa
-    y actualizar las instancia guardadas en el registro"""
+    y actualizar las instancia guardadas en el registro"""    
     cs_object = register.load(containers.ID)
     bgs = register.load(bridges.ID)
     if cs_object is None: return
+    # Cambiamos el nvl del logger para que siempre se muestren los
+    # warning
+    root_logger = logging.getLogger()
+    lvl = root_logger.level
+    root_logger.level = logging.WARNING
+    warned = False
+    # Detecamos los cambios que se hayan producido fuera del programa
+    # de los contenedores
     process = subprocess.run(
         ["lxc", "list"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
     cs_info = lxclist_as_dict(process.stdout.decode())
-    # Detecamos los cambios que se hayan producido fuera del programa
-    # de los contenedores
     cs_updated = []
     for c in cs_object:
         if c.name not in cs_info["NAME"]:
@@ -173,6 +179,7 @@ def check_updates():
                 if c.name in bg.used_by:
                     bg.used_by.remove(c.name)
             program_logger.warning(warn)
+            warned = True
             continue
         index = cs_info["NAME"].index(c.name)
         if c.state != cs_info["STATE"][index]:
@@ -182,6 +189,7 @@ def check_updates():
                    f"'{new_state}' (informacion actualizada)")
             c.state = new_state
             program_logger.warning(warn)
+            warned = True
         if c.state == "RUNNING":
             info = cs_info["IPV4"][index]
             current_nets = {}
@@ -203,6 +211,7 @@ def check_updates():
                             "arrancado pero lxc no muestra la conexion " +
                             "(informacion NO actualizada)")
                     program_logger.warning(warn)
+                    warned = True
                 else:
                     if ip not in current_nets.values():
                         new_ip = current_nets[eth]
@@ -213,32 +222,57 @@ def check_updates():
                                 "(informacion actualizada)")
                         c.networks[eth] = new_ip
                         program_logger.warning(warn)
+                        warned = True
                     current_nets.pop(eth)
+            if c.name == "s1": current_nets["eth1"] = "10.0.1.40"
             for eth in current_nets:
-                warn = (" El contenedor se ha conectado a otro " +
+                warn = (f" El contenedor '{c.name}' se ha conectado a otro " +
                            "bridge que no forma parte del programa " + 
                            "(informacion NO actualizada)")
-                if bgs is None:
-                    program_logger.warning(warn)
                 for bg in bgs:
                     if eth == bg.ethernet:
-                        warn = (" El contenedor se ha conectado a otro " +
-                           f"bridge que forma parte del programa '{bg.name}' " + 
-                           "(informacion actualizada)")
-                        b.used_by.append(c.name)
+                        warn = (f" El contenedor '{c.name}' se ha conectado " +
+                           f"a otro bridge que forma parte del programa " + 
+                           f"'{bg.name}' (informacion actualizada)")
+                        if c.name not in bg.used_by:
+                            bg.used_by.append(c.name)
                         c.networks[eth] = current_nets[eth]
                         program_logger.warning(warn)
+                        warned = True
                         break
                 else:
                     program_logger.warning(warn)
+                    warned = True
         cs_updated.append(c)
-    register.update(containers.ID, cs_updated)
-    register.update(bridges.ID, bgs)
-    # if warned:
-    #     print("Se acaban de mostrar warnings importantes que pueden " + 
-    #           "modificar el comportamiento del programa")
-    #     input("Pulsa enter para proseguir con la ejecucion una vez los " + 
-    #           "hayas leido: ")
+    if len(cs_updated) == 0:
+        register.remove(containers.ID)
+    else:
+        register.update(containers.ID, cs_updated)
+    # Detecamos los cambios que se hayan producido fuera del programa
+    # de los bridge   
+    process = subprocess.run(
+        ["lxc", "network", "list"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    bgs_info = lxclist_as_dict(process.stdout.decode())
+    bgs_updated = []
+    for bg in bgs:
+        if bg.name not in bgs_info["NAME"]:
+            warn = (f" El bridge '{bg.name}' se ha eliminado fuera " +
+                    "del programa (informacion actualizada)")
+            program_logger.warning(warn)
+            continue
+        bgs_updated.append(bg)
+    register.update(bridges.ID, bgs_updated)
+    # Volvemos a poner el nvl de logger de antes y nos aseguramos que 
+    # el usuario lea los warnings
+    root_logger.level = lvl
+    if warned:
+        print("Se acaban de mostrar warnings importantes que pueden " + 
+              "modificar el comportamiento del programa")
+        input("Pulsa enter para proseguir con la ejecucion una vez se " + 
+              "hayan leido ")
 
 # --------------------------------------------------------------------  
 def lxc_list():
