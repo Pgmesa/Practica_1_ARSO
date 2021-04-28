@@ -63,6 +63,9 @@ def eliminar(*target_cs, options={}, flags=[],
                     skip_tags=[machines.LB, machines.CLIENT]):
     target_cs = filter(lambda cs: not cs.tag in skip_tags, target_cs)
     target_cs = list(target_cs)
+    if len(target_cs) == 0:
+        cmd_logger.error(" No hay servidores que eliminar")
+        return
     if not "-f" in flags:
         print("Se eliminaran los servidores:" +
                     f" '{concat_array(target_cs)}'")

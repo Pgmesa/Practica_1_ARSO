@@ -154,6 +154,7 @@ def check_updates():
     producir en los contenedores y bridges desde fuera del programa
     y actualizar las instancia guardadas en el registro"""
     cs_object = register.load(containers.ID)
+    bgs = register.load(bridges.ID)
     if cs_object is None: return
     process = subprocess.run(
         ["lxc", "list"],
@@ -166,34 +167,78 @@ def check_updates():
     cs_updated = []
     for c in cs_object:
         if c.name not in cs_info["NAME"]:
-            warn = (f" El contenedor {c.name} se ha eliminado fuera " +
+            warn = (f" El contenedor '{c.name}' se ha eliminado fuera " +
                     "del programa (informacion actualizada)")
+            for bg in bgs:
+                if c.name in bg.used_by:
+                    bg.used_by.remove(c.name)
             program_logger.warning(warn)
             continue
         index = cs_info["NAME"].index(c.name)
         if c.state != cs_info["STATE"][index]:
             new_state = cs_info["STATE"][index]
-            warn = (f" El contenedor {c.name} se ha modificado fuera " +
-                   f"del programa, ha pasado de {c.state} a " + 
-                   f"{new_state} (informacion actualizada)")
+            warn = (f" El contenedor '{c.name}' se ha modificado fuera " +
+                   f"del programa, ha pasado de '{c.state}' a " + 
+                   f"'{new_state}' (informacion actualizada)")
             c.state = new_state
             program_logger.warning(warn)
         if c.state == "RUNNING":
-            new = cs_info["IPV4"][index]
-            splitted = re.split(r"\(| |\)", new)
-            while "" in splitted:
-                splitted.remove("")
-            new_ipv4, new_eth = splitted
+            info = cs_info["IPV4"][index]
+            current_nets = {}
+            if info != "":
+                if type(info) != list:
+                    info = [info]
+                for line in info:
+                    splitted = re.split(r"\(| |\)", line)
+                    while "" in splitted:
+                            splitted.remove("")
+                    ipv4, current_eth = splitted
+                    current_nets[current_eth] = ipv4
+            not_existing_nets = {}
             for eth, ip in c.networks.items():
-                if ip != new_ipv4:
-                    warn = (f" La ipv4 del contenedor {c.name} se ha " +
-                            f"modificado fuera del programa, ha pasado " + 
-                            f"de {ip}:{eth} a {new_ipv4}:{new_eth} " +
-                             "(informacion actualizada)")
-                    c.networks[new_eth] = new_ipv4
+                if eth not in current_nets:
+                    warn = (f" La ethernet '{eth}' de '{c.name}' se ha " + 
+                            "modificado desde fuera del programa o hay " + 
+                            f"algun error ya que el contenedor esta " +
+                            "arrancado pero lxc no muestra la conexion " +
+                            "(informacion NO actualizada)")
+                    program_logger.warning(warn)
+                else:
+                    if ip not in current_nets.values():
+                        new_ip = current_nets[eth]
+                        warn = (f" La ip '{ip}' de la ethernet '{eth}' " +
+                                f"del contenedor '{c.name}' se ha " +
+                                f"modificado fuera del programa, ha pasado " + 
+                                f"de {ip}:{eth} a {new_ip}:{eth} " +
+                                "(informacion actualizada)")
+                        c.networks[eth] = new_ip
+                        program_logger.warning(warn)
+                    current_nets.pop(eth)
+            for eth in current_nets:
+                warn = (" El contenedor se ha conectado a otro " +
+                           "bridge que no forma parte del programa " + 
+                           "(informacion NO actualizada)")
+                if bgs is None:
+                    program_logger.warning(warn)
+                for bg in bgs:
+                    if eth == bg.ethernet:
+                        warn = (" El contenedor se ha conectado a otro " +
+                           f"bridge que forma parte del programa '{bg.name}' " + 
+                           "(informacion actualizada)")
+                        b.used_by.append(c.name)
+                        c.networks[eth] = current_nets[eth]
+                        program_logger.warning(warn)
+                        break
+                else:
                     program_logger.warning(warn)
         cs_updated.append(c)
     register.update(containers.ID, cs_updated)
+    register.update(bridges.ID, bgs)
+    # if warned:
+    #     print("Se acaban de mostrar warnings importantes que pueden " + 
+    #           "modificar el comportamiento del programa")
+    #     input("Pulsa enter para proseguir con la ejecucion una vez los " + 
+    #           "hayas leido: ")
 
 # --------------------------------------------------------------------  
 def lxc_list():
@@ -226,36 +271,67 @@ def lxc_network_list():
 def lxclist_as_dict(string:str):
     info = {}
     chars = list(string)
-    cells = -1
+    colums = -1
     line_length = 0
     cells_length = []
-    cell_start = 0
+    cell_start = 1
+    # Calculamos la longitud de cada linea, la longitud de cada celda
+    # y el numero de filas y columnas
     for i, c in enumerate(chars):
         if c == "|":
             break
-        line_length = 1 + i
+        line_length = i + 1
         if c == "+":
-            cells += 1
-            if cells > 0:
+            colums += 1 
+            if colums > 0:
                 cells_length.append(line_length-1-cell_start)
             cell_start = 1 + i
-            continue  
-    lines = len(chars)/line_length
-    rows = floor(lines/2)
-    
+            continue
+    rows = -1
+    lines = int(len(chars)/line_length)
+    for i in range(lines):
+        if chars[i*line_length] == "+":
+            rows += 1
+    # Vamos mirando cada linea de cada columna y vemos si es 
+    # una fila de guiones o es una fila con espacio en 
+    # blanco => informacion
     _start = line_length + 1
-    for i in range(cells):
+    for i in range(colums):
         if i != 0:
             _start += cells_length[i-1] + 1
-        _end = _start + cells_length[i]
+        _end = _start + cells_length[i] - 1
         key = string[_start:_end].strip()
         info[key] = []
+        repeated = 0
+        k = 0
         for j in range(rows):
-            start = _start + line_length*(2*(j+1))
-            if start < len(chars):
-                end = start + cells_length[i]
+            start = _start + line_length*(k+j+1) 
+            while start < len(chars) and chars[start] == "-":
+                start += line_length
+            end = start + cells_length[i] - 1   
+            values = []
+            if start >= len(chars): continue
+            # Miramos si hay mas de una linea seguida con 
+            # informacion y con k recalibramos los siguientes
+            # start de las siguientes lineas
+            while chars[start] == " ":
                 value = string[start:end].strip()
-                info[key].append(value)
+                values.append(value)
+                if len(values) >= 1:
+                    k += 1
+                start += line_length
+                end += line_length
+            # Establecemos un criterio de devolucion de la
+            # informacion para que luego sea masfacil de acceder
+            # a esta en otras funciones
+            if len(values) > 1:
+                while "" in values:
+                    values.remove("")
+            if len(values) == 1:
+                values = values[0]
+            if len(values) == 0:
+                values = ""
+            info[key].append(values)
     return info
 
 # --------------------------------------------------------------------
