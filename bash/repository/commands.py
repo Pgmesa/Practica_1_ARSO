@@ -60,11 +60,13 @@ def pausar(*target_cs, options={}, flags=[]):
 # --------------------------------------------------------------------
 @target_containers(cmd_logger) 
 def eliminar(*target_cs, options={}, flags=[],
-                    skip_tags=[machines.LB, machines.CLIENT]):
+                    skip_tags=[machines.LB, machines.CLIENT]): 
     target_cs = filter(lambda cs: not cs.tag in skip_tags, target_cs)
     target_cs = list(target_cs)
     if len(target_cs) == 0:
-        cmd_logger.error(" No hay servidores que eliminar")
+        msg = (" No hay servidores que eliminar o los " + 
+                                    "introducidos no son validos")
+        cmd_logger.error(msg)
         return
     if not "-f" in flags:
         print("Se eliminaran los servidores:" +

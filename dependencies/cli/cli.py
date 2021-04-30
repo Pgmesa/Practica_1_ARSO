@@ -2,14 +2,8 @@
 from .aux_classes import Command, Flag
 
 
-class CmdLineError(Exception):
-    def __init__(self, msg:str, _help=True):
-        hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
-        if _help: 
-            msg += hlpm
-        super().__init__(msg)
-
-# ------- Command Line Interface
+# ---------------------- Command Line Interface ----------------------
+# -------------------------------------------------------------------- 
 class Cli:
     def __init__(self):
         self.commands = {}
@@ -23,6 +17,7 @@ class Cli:
     
     def add_flag(self, flag:Flag):
         self.flags[flag.name] = flag
+        
 # --------------------------------------------------------------------   
     def process_cmdline(self, args:list) -> list:
         args.pop(0) # Eliminamos el nombre del programa
@@ -62,6 +57,7 @@ class Cli:
                 processed_line["flags"] = inFlags
                 return processed_line
         raise CmdLineError(f"El comando '{args[0]}' no se reconoce")
+    
 # --------------------------------------------------------------------   
     @staticmethod
     def check_command(cmd, args):
@@ -123,8 +119,10 @@ class Cli:
         inFlags = list(map(lambda flag: str(flag), inFlags))
         return inFlags
     
+# --------------------------------------------------------------------     
     def printHelp(self):
-        print(" python3 __main__ [commands] <options> <flags>")
+        print(" python3 __main__ [commands] <parameters> " + 
+                                    "[options] <parameters> [flags]")
         print(" + Commands: ")
         for arg in self.commands.values():
             print(f"    -> {arg.name} --> {arg.description}")
@@ -140,5 +138,11 @@ class Cli:
             else:
                 print(f"    -> {flag.name}")
 
-
+# -------------------------------------------------------------------- 
+class CmdLineError(Exception):
+    def __init__(self, msg:str, _help=True):
+        hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
+        if _help: 
+            msg += hlpm
+        super().__init__(msg)
         

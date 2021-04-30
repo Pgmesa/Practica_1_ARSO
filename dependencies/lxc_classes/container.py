@@ -1,12 +1,12 @@
+
 import subprocess
- 
+
 # Possible states of the virtual machines
 NOT_INIT = "NOT INITIALIZED"
 STOPPED = "STOPPED"
 FROZEN = "FROZEN"
 RUNNING = "RUNNING"
 DELETED = "DELETED"
-
 
 class LxcError(Exception):
     pass
@@ -59,14 +59,18 @@ class Container:
         self.run(["lxc", "config", "set", self.name, "limits.cpu", "2"])
         
     def start(self):
-        if self.state != STOPPED and self.state != FROZEN:
+        if self.state == RUNNING:
+            raise LxcError(f" {self.tag} '{self.name}' ya esta arrancado")
+        elif self.state == DELETED and self.state == NOT_INIT:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser arrancado")
         self.run(["lxc", "start", self.name])  
         self.state = RUNNING
         
     def stop(self):
-        if self.state != RUNNING and self.state != FROZEN:
+        if self.state == STOPPED:
+            raise LxcError(f" {self.tag} '{self.name}' ya esta detenido")
+        elif self.state == DELETED and self.state == NOT_INIT:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser detenido")
         self.run(["lxc", "stop", self.name, "--force"])  
@@ -80,7 +84,9 @@ class Container:
         self.state = DELETED
     
     def pause(self):
-        if self.state != RUNNING:
+        if self.state == FROZEN:
+            raise LxcError(f" {self.tag} '{self.name}' ya esta pausado")
+        elif self.state != RUNNING:
             raise LxcError(f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser pausado")
         self.run(["lxc", "pause", self.name])  

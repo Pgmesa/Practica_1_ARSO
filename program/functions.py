@@ -95,19 +95,35 @@ def print_state():
         print("No bridges created by the program")
         
 def show_diagram():
-    subprocess.Popen(
-        ["display", "program/resources/diagram.png"],
-        stdout=subprocess.PIPE
-    ) 
+    try:
+        path = "program/resources/images/diagram.png"
+        subprocess.Popen(
+            ["display", path],
+            stdout=subprocess.PIPE
+        ) 
+    except Exception as err:
+        if "display" in str(err):
+            program_logger.error("Se necesita instalar 'imagemagick'")
+        else:
+            program_logger.error(err)
+        
 def show_files_structure():
-    subprocess.Popen(
-        ["display", "program/resources/files_structure.png"],
-        stdout=subprocess.PIPE
-    )
-    subprocess.Popen(
-        ["display", "program/resources/external_dependencies.png"],
-        stdout=subprocess.PIPE
-    )
+    try:
+        path = "program/resources/images/files_structure.png"
+        subprocess.Popen(
+            ["display", path],
+            stdout=subprocess.PIPE
+        )
+        path = "program/resources/images/external_dependencies.png"
+        subprocess.Popen(
+            ["display", path],
+            stdout=subprocess.PIPE
+        )
+    except Exception as err:
+        if "display" in str(err):
+            program_logger.error("Se necesita instalar 'imagemagick'")
+        else:
+            program_logger.error(err)
     
 # --------------------------------------------------------------------   
 def check_enviroment():
@@ -122,6 +138,7 @@ def check_enviroment():
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE
         )
+        subprocess.run(["lxd", "init", "--auto"])
     except:
         err = (" 'lxd' is not installed in this computer and it's necessary " +
                "for the execution of this program.\nEnter 'sudo apt " +
@@ -134,20 +151,22 @@ def check_enviroment():
             stdout=subprocess.PIPE
         )
     except:
-        warn = (" xterm is not installed in this computer, and some " +
+        warn = (" 'xterm' is not installed in this computer, and some " +
               "functionalities may require this module, please enter " +
               "'sudo apt install xterm' for installing it")
         program_logger.warning(warn)
-    # Inicializamos lxd y ejecutamos si no existe el profile default
-    process = subprocess.run(
-        ["lxc", "profile", "list"],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE
-    )
-    if "default" not in process.stdout.decode():
-        program_logger.info(" Inicializando lxd...")
-        subprocess.run(["lxd", "init", "--auto"])
-        program_logger.info(" lxd inicializado...")
+    try:
+        subprocess.run(
+            ["convert", "--version"],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE
+        )
+    except:
+        warn = (" 'imagemagick' is not installed in this computer, and some " +
+              "functionalities may require this module, please enter " +
+              "'sudo apt install imagemagick' for installing it")
+        program_logger.warning(warn)
+
 
 def check_updates():
     """Implementacion para detectar cambios que se hayan podido
@@ -160,6 +179,7 @@ def check_updates():
     # warning
     root_logger = logging.getLogger()
     lvl = root_logger.level
+    program_logger.debug(f" Nivel de logger establecido -> {lvl}")
     root_logger.level = logging.WARNING
     warned = False
     # Detecamos los cambios que se hayan producido fuera del programa
@@ -202,7 +222,6 @@ def check_updates():
                             splitted.remove("")
                     ipv4, current_eth = splitted
                     current_nets[current_eth] = ipv4
-            not_existing_nets = {}
             for eth, ip in c.networks.items():
                 if eth not in current_nets:
                     warn = (f" La ethernet '{eth}' de '{c.name}' se ha " + 
@@ -224,7 +243,6 @@ def check_updates():
                         program_logger.warning(warn)
                         warned = True
                     current_nets.pop(eth)
-            if c.name == "s1": current_nets["eth1"] = "10.0.1.40"
             for eth in current_nets:
                 warn = (f" El contenedor '{c.name}' se ha conectado a otro " +
                            "bridge que no forma parte del programa " + 
@@ -336,7 +354,6 @@ def lxclist_as_dict(string:str):
         _end = _start + cells_length[i] - 1
         key = string[_start:_end].strip()
         info[key] = []
-        repeated = 0
         k = 0
         for j in range(rows):
             start = _start + line_length*(k+j+1) 

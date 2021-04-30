@@ -22,7 +22,7 @@ def init(b:Bridge=None):
 def delete(b:Bridge):
     bgs_logger.info(f" Eliminando bridge '{b.name}'...")
     b.delete()
-    bgs_logger.info(f"  bridge '{b.name}' eliminado con exito")
+    bgs_logger.info(f" bridge '{b.name}' eliminado con exito")
     update_bridge(b, remove=True)
 # -------------------------------------------------------------------
 

@@ -75,7 +75,6 @@ def configure_netfile(c:Container):
     """Replace the configuration file with a new one"""
     networks = c.networks
     if len(networks) == 1 and list(networks.keys())[0] == "eth0": return
-    
     config_file =("network:\n" +
                   "    version: 2\n" + 
                   "    ethernets:\n")
@@ -83,38 +82,44 @@ def configure_netfile(c:Container):
         new_eth_config = (f"        {eth}:\n" + 
                             "            dhcp4: true\n")
         config_file += new_eth_config
-    cs_logger.info(f" Configurando el net_file del {c.tag} '{c.name}'... " +
-                            "(Esta operacion puede tardar un rato dependiendo del PC " + 
-                                "o incluso saltar el timeout si es muy lento)")
+    msg = (f" Configurando el net_file del {c.tag} '{c.name}'... " +
+           "(Esta operacion puede tardar un rato dependiendo del PC " + 
+           "o incluso saltar el timeout si es muy lento)")
+    cs_logger.info(msg)
     cs_logger.debug("\n" + config_file)
     file_location = "50-cloud-init.yaml"
     with open(file_location, "w") as file:
         file.write(config_file)
-    # El problema esta en que lo crea pero al hacer start o debido a que no se ha inicializado todavia se crea el primer
-    # fichero sobrescribiendo al nuestro
+    # El problema esta en que lo crea, pero al hacer start o debido a
+    # que no se ha inicializado todavia, se crea el primer fichero 
+    # sobrescribiendo al nuestro
     subprocess.run(["lxc","start",c.name])
     error = "Error: not found"
     time = 0
     t0 = 2
     timeout = 60
+    path = f"{c.name}/etc/netplan/50-cloud-init.yaml"
     while "Error: not found" in error:
         if not time >= timeout:
-            process = subprocess.Popen(
-                ["lxc","file","delete", f"{c.name}/etc/netplan/50-cloud-init.yaml"],
-                stderr=subprocess.PIPE
+            process = subprocess.run(
+                ["lxc","file","delete", path],
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE
             )
-            error = process.communicate()[1].decode().strip()
-            cs_logger.debug(f"Intentando acceder a fichero de configuracion de '{c.name}' (stderr = '{error}') -> "
-                                    + ("SUCCESS" if error == "" else "ERROR"))
+            error = process.stderr.decode().strip()
+            msg = (f"Intentando acceder al fichero de configuracion " + 
+                  f"de '{c.name}' (stderr = '{error}') -> " +
+                  ("SUCCESS" if error == "" else "ERROR"))
+            cs_logger.debug(msg)
             sleep(t0)
             time += t0
         else:
             subprocess.call(["lxc","stop",c.name])
-            #subprocess.call(["lxc", "delete", "--force", vm.name])
-            cs_logger.error(f" Error al añadir fichero de configuracion a '{c.name}' (timeout)")
+            cs_logger.error(f" Error al añadir fichero de " + 
+                            f"configuracion a '{c.name}' (timeout)")
             remove(file_location)
             return        
-    subprocess.call(["lxc","file","push",file_location, f"{c.name}/etc/netplan/50-cloud-init.yaml"])
+    subprocess.call(["lxc","file","push", file_location, path])
     subprocess.call(["lxc","stop",c.name])
     cs_logger.info(f" Net del {c.tag} '{c.name}' configurada con exito")
     remove(file_location)
