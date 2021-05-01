@@ -275,9 +275,10 @@ def check_updates():
         stderr=subprocess.PIPE
     )
     bgs_info = lxclist_as_dict(process.stdout.decode())
+    headers = list(bgs_info.keys())
     bgs_updated = []
     for bg in bgs:
-        if bg.name not in bgs_info["NAME"]:
+        if bg.name not in bgs_info[headers[0]]:
             warn = (f" El bridge '{bg.name}' se ha eliminado fuera " +
                     "del programa (informacion actualizada)")
             program_logger.warning(warn)
