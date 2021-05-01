@@ -24,12 +24,11 @@ def main():
         if args_processed == None: return
         # Configuramos la cantidad de info que se va a mostar
         bash.config_verbosity(args_processed["flags"])
-        # Iniciamos el programa
-        main_logger.info(" Programa iniciado")
         # Realizamos unas comprobaciones previas (ProgramError)
         program.check_enviroment()
         program.check_updates()
-        # Ejecutamos la orden
+        # Informamos del inicio del programa y ejecutamos la orden
+        main_logger.info(" Programa iniciado")
         main_logger.debug(f" Ejecutando la orden {args_processed}")
         bash.execute(args_processed)
     # Manejamos los errores que puedan surgir 
@@ -45,7 +44,7 @@ def main():
         answer = input("¿Obtener traza completa?(y/n): ")
         if answer.lower() == "y":
             main_logger.exception(err)
-    finally:
+    else:
         main_logger.info(" Programa finalizado")
         
 if __name__ == "__main__":
