@@ -190,9 +190,10 @@ def check_updates():
         stderr=subprocess.PIPE
     )
     cs_info = lxclist_as_dict(process.stdout.decode())
+    headers = list(cs_info.keys())
     cs_updated = []
     for c in cs_object:
-        if c.name not in cs_info["NAME"]:
+        if c.name not in cs_info[headers[0]]:
             warn = (f" El contenedor '{c.name}' se ha eliminado fuera " +
                     "del programa (informacion actualizada)")
             for bg in bgs:
@@ -201,9 +202,9 @@ def check_updates():
             program_logger.warning(warn)
             warned = True
             continue
-        index = cs_info["NAME"].index(c.name)
-        if c.state != cs_info["STATE"][index]:
-            new_state = cs_info["STATE"][index]
+        index = cs_info[headers[0]].index(c.name)
+        if c.state != cs_info[headers[1]][index]:
+            new_state = cs_info[headers[1]][index]
             warn = (f" El contenedor '{c.name}' se ha modificado fuera " +
                    f"del programa, ha pasado de '{c.state}' a " + 
                    f"'{new_state}' (informacion actualizada)")
@@ -211,7 +212,7 @@ def check_updates():
             program_logger.warning(warn)
             warned = True
         if c.state == "RUNNING":
-            info = cs_info["IPV4"][index]
+            info = cs_info[headers[2]][index]
             current_nets = {}
             if info != "":
                 if type(info) != list:
