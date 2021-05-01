@@ -13,13 +13,26 @@ import program.controllers.containers as containers
 import dependencies.register.register as register
 from dependencies.utils.tools import pretty, objectlist_as_dict
 
+# --------------------- FUNCIONES DE PROGRAMA ------------------------
+# --------------------------------------------------------------------
+# Este fichero se encarga de proporcionar funciones especificas del
+# programa. Define como se van a conectar los contenedores con 
+# los brisges (quien con quien), realiza comprobaciones de entorno y 
+# muestra informacion del programa -> su estado, estructura, etc.
+# --------------------------------------------------------------------
 
 class ProgramError(Exception):
     pass
-
+# --------------------------------------------------------------------
 program_logger = logging.getLogger(__name__)
 # --------------------------------------------------------------------
 def connect_machines():
+    """ Se encarga de conectar los contenedores con los bridge. Mira 
+    todos los contenedores creados (que estan en el registro) y si
+    no se le ha asociado a ninguna network todavia lo conecta a una de
+    las existentes dependiendo del tag que tenga (Los servidores a
+    bridge 0, los clientes al bridge 1 y load balancer a los 2)"""
+    
     # Si no hay puentes a los que conectar salimos
     bgs = objectlist_as_dict(
         register.load(bridges.ID),
@@ -60,6 +73,8 @@ def connect_machines():
         containers.configure_netfile(c)
 
 def update_conexions():
+    """Revisa si algun contenedor ha sido eliminado para 
+    eliminarlo del bridge al que estaba asociado (bridge.used_by)"""
     bgs = register.load(register_id=bridges.ID)
     if bgs == None: return
     cs = register.load(register_id=containers.ID)
@@ -79,22 +94,25 @@ def update_conexions():
     
 # --------------------------------------------------------------------
 def print_state():
+    """Muestra por consola el estado de los objetos del programa 
+    (contenedores y bridges)"""
     cs = register.load(register_id=containers.ID)
     bgs = register.load(register_id=bridges.ID)
-    print("VIRTUAL MACHINES")
+    print("CONTENEDORES")
     if cs != None:
         for c in cs:
             print(pretty(c))
     else:
-        print("No containers created by the program")
+        print("No hay contenedores creados por el programa")
     print("BRIDGES")
     if bgs != None:       
         for b in bgs:
             print(pretty(b))
     else:
-        print("No bridges created by the program")
+        print("No hay bridges creados por el programa")
         
 def show_diagram():
+    """Muestra un diagrama que explica la finalidad del programa"""
     try:
         path = "program/resources/images/diagram.png"
         subprocess.Popen(
@@ -108,6 +126,9 @@ def show_diagram():
             program_logger.error(err)
         
 def show_files_structure():
+    """Muestra la estructura de ficheros utilizada para este proyecto y
+    sus conexiones. Tambien muestra las dependencias externas a las que
+    esta ligado"""
     try:
         path = "program/resources/images/files_structure.png"
         subprocess.Popen(
@@ -127,6 +148,16 @@ def show_files_structure():
     
 # --------------------------------------------------------------------   
 def check_enviroment():
+    """Revisa que todas las dependencias externas que necesita el 
+    programa se encuentran disponibles en el PC donde se esta
+    ejecutando y en caso contrario lanza un error si la dependencia 
+    es obligatoria o un warning si es opcional. Estas advertencias 
+    son las unicas de este fichero que se han dejado en ingles 
+
+    Raises:
+        ProgramError: Si el SO que se esta usando no es Linux
+        ProgramError: Si lxd no esta instalado
+    """
     system = platform.system()
     program_logger.debug(f" {system} OS detected")
     if system != "Linux":
@@ -171,7 +202,9 @@ def check_enviroment():
 def check_updates():
     """Implementacion para detectar cambios que se hayan podido
     producir en los contenedores y bridges desde fuera del programa
-    y actualizar las instancia guardadas en el registro"""    
+    y actualizar las instancia guardadas en el registro. A partir 
+    de las listas que proporciona lxc, se analiza si se han
+    producido cambios que se deban actualizar en el programa"""    
     cs_object = register.load(containers.ID)
     bgs = register.load(bridges.ID)
     if cs_object is None: return
@@ -296,6 +329,11 @@ def check_updates():
 
 # --------------------------------------------------------------------  
 def lxc_list():
+    """Se encarga de mostrar la lista de contenedores de lxc, pero 
+    en caso de estar arrancados, como la iptarda un r ato en
+    aparecer, la funcion espera a que se haya cargado toda la
+    informacion para mostrar la lista. Comprueba que todas las ips
+    hayan aparecido"""
     cs = register.load(containers.ID)
     program_logger.info(" Cargando resultados...")
     if cs == None:
@@ -320,9 +358,23 @@ def lxc_list():
     print(salida)
 
 def lxc_network_list():
+    """Muestra la network list de lxc (bridges creados)"""
     subprocess.call(["lxc", "network", "list"])
     
-def lxclist_as_dict(string:str):
+def lxclist_as_dict(string:str) -> dict:
+    """Analiza una lista de lxc y proporciona toda su informacion 
+    en forma de diccionario para que sea facilmente accesible.
+    CUIDADO: Los headers de la lista dependen del idioma en el que
+    este el ordenador anfitrion o del idioma usado de lxc (No 
+    siempre son los mismos)
+
+    Args:
+        string (str): string que contiene la lista de lxc
+
+    Returns:
+        dict: diccionario con la informacion de la lista (los 
+        headers son las claves del diccionario)
+    """
     info = {}
     chars = list(string)
     colums = -1

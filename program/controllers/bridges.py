@@ -5,8 +5,15 @@ import dependencies.register.register as register
 from dependencies.utils.decorators import catch_foreach
 from dependencies.lxc_classes.bridge import Bridge, LxcNetworkError
 
+# --------------- CONTROLADOR DE BRIDGES (PUENTES) -------------------
+# --------------------------------------------------------------------
+# Proporciona funciones para manipular los bridges de forma sencilla
+# y maneja las excepciones y errores que se puedan dar a la hora
+# de manipularlos (catch_foreach, se encarga de atrapar las 
+# excepciones cada vez que se llama a la funcion)
+# --------------------------------------------------------------------
 
-# Id del registro
+# Id con el que se van a guardar los bridges en el registro
 ID = "bridges"
 bgs_logger = logging.getLogger(__name__)
 # -------------------------------------------------------------------
@@ -27,19 +34,32 @@ def delete(b:Bridge):
 # -------------------------------------------------------------------
 
 # -------------------------------------------------------------------
-def attach(vm_name:str, to_bridge:Bridge):
+def attach(cs_name:str, to_bridge:Bridge):
+    """Añade un contenedor al bridge
+
+    Args:
+        cs_name (str): Nombre del contenedor a añadir
+        to_bridge (Bridge): Bridge al que se va a añadir el contenedor
+    """
     bridge = to_bridge
-    msg = f" Agregando '{vm_name}' al bridge {bridge.name}..."
+    msg = f" Agregando '{cs_name}' al bridge {bridge.name}..."
     bgs_logger.info(msg)
     try:
-        bridge.add_vm(vm_name)
-        bgs_logger.info(f" '{vm_name}' agregado con exito")
+        bridge.add_vm(cs_name)
+        bgs_logger.info(f" '{cs_name}' agregado con exito")
     except LxcNetworkError as err:
         bgs_logger.error(err)
     update_bridge(bridge)
     
 # -------------------------------------------------------------------   
 def update_bridge(b_to_update:Bridge, remove=False):
+    """Actualiza el objeto de un bridge en el registro
+
+    Args:
+        b_to_update (Bridge): Contenedor a actualizar
+        remove (bool, optional): Si es verdadero, se elimina el
+            contenedor del registro. Por defecto es False
+    """
     bgs = register.load(register_id=ID)
     index = None
     for i, b in enumerate(bgs):
@@ -57,6 +77,11 @@ def update_bridge(b_to_update:Bridge, remove=False):
         register.update(ID, bgs)
 
 def add_bridge(b_to_add:Bridge):
+    """Añade un bridge al registro
+
+    Args:
+        b_to_add (Bridge): Bridge a añadir
+    """
     cs = register.load(register_id=ID)
     if cs == None:
         register.add(ID, [b_to_add])

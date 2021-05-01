@@ -1,4 +1,8 @@
-# Integrantes del grupo: Pablo García Mesa, Santiago González Gómez, Fernando Fernández Martín
+# + Integrantes del grupo: 
+# -> Pablo García Mesa
+# -> Santiago González Gómez
+# -> Fernando Fernández Martín
+
 import sys
 import logging
 import subprocess
@@ -12,6 +16,15 @@ from program.functions import ProgramError
 # --------------------------------------------------------------------
 # Este es un fichero fachada en el cual se ve de forma global el 
 # flujo de ejecucion que sigue el programa sin entrar en detalles
+# --------------------------------------------------------------------
+# Los criterios de nivel de logger que se van a seguir son:
+# - logger.warning():
+# cuando se necesite informar al usuario de algo importante
+# - logger.error():
+# cuando alguna accion no se haya podido completar por algun motivo
+# - logger.critical():
+# cuando un error impida la continuacion de la ejecucion del programa 
+# --------------------------------------------------------------------
 
 logging.basicConfig(level=logging.NOTSET)
 main_logger = logging.getLogger(__name__)
@@ -22,7 +35,7 @@ def main():
         # Procesamos la linea de comandos (CmdLineError)
         args_processed = cli.process_cmdline(sys.argv)
         if args_processed == None: return
-        # Configuramos la cantidad de info que se va a mostar
+        # Configuramos la cantidad de info que se va a mostrar
         bash.config_verbosity(args_processed["flags"])
         # Realizamos unas comprobaciones previas (ProgramError)
         program.check_enviroment()
