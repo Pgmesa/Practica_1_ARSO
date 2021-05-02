@@ -60,7 +60,7 @@ def concat_array(array, separator=",") -> str:
     return c
    
 # --------------------------------------------------------------------
-def remove_many(*remove, remove_in:list):
+def remove_many(remove_in:list, *remove):
     for r in remove:
         with suppress(Exception):
             remove_in.remove(r)

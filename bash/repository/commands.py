@@ -9,13 +9,25 @@ import program.machines as machines
 import program.functions as program
 import dependencies.register.register as register
 from dependencies.utils.tools import objectlist_as_dict
-from dependencies.utils.tools import concat_array, remove_many
+from dependencies.utils.tools import concat_array
 
+# --------------------- REPOSITORIO DE COMANDOS ----------------------
+# --------------------------------------------------------------------
+# Aqui se definen todas las funciones asociadas a los comandos que 
+# tiene el programa. Estas funciones se pueden comunicar entre si 
+# mediante variables opcionales adicionales para reutilizar el codigo
+# --------------------------------------------------------------------
 
 cmd_logger = logging.getLogger(__name__)
 # --------------------------------------------------------------------
 @target_containers(cmd_logger)           
 def arrancar(*target_cs, options={}, flags=[]):
+    """Arranca los contenedores que se enceuntren en target_cs
+
+    Args:
+        options (dict, optional): Opciones del comando arrancar
+        flags (list, optional): Flags introducidos en el programa
+    """
     # Arrancamos los contenedores validos
     msg = f" Arrancando contenedores '{concat_array(target_cs)}'..."
     cmd_logger.info(msg)
@@ -34,6 +46,12 @@ def arrancar(*target_cs, options={}, flags=[]):
 # --------------------------------------------------------------------
 @target_containers(cmd_logger) 
 def parar(*target_cs, options={}, flags=[]):
+    """Detiene los contenedores que se enceuntren en target_cs
+
+    Args:
+        options (dict, optional): Opciones del comando parar
+        flags (list, optional): Flags introducidos en el programa
+    """
     # Paramos los contenedores validos
     msg = f" Deteniendo contenedores '{concat_array(target_cs)}'..."
     cmd_logger.info(msg)
@@ -47,6 +65,12 @@ def parar(*target_cs, options={}, flags=[]):
 # --------------------------------------------------------------------  
 @target_containers(cmd_logger)  
 def pausar(*target_cs, options={}, flags=[]):
+    """Pausa los contenedores que se enceuntren en target_cs
+
+    Args:
+        options (dict, optional): Opciones del comando pausar
+        flags (list, optional): Flags introducidos en el programa
+    """
     # Pausamos los contenedores validos
     msg = f" Parando contenedores '{concat_array(target_cs)}'..."
     cmd_logger.info(msg)
@@ -61,6 +85,17 @@ def pausar(*target_cs, options={}, flags=[]):
 @target_containers(cmd_logger) 
 def eliminar(*target_cs, options={}, flags=[],
                     skip_tags=[machines.LB, machines.CLIENT]): 
+    """Elimina los contenedores que se enceuntren en target_cs.
+    Por defecto, esta funcion solo elimina los contenedores que 
+    sean servidores
+
+    Args:
+        options (dict, optional): Opciones del comando eliminar
+        flags (list, optional): Flags introducidos en el programa
+        skip_tags (list, optional): Variable que permite que destruir
+            se comunique con esta funcion. Por defecto esta funcion 
+            no elimina contenedores que sean clientes o balanceadores
+    """
     target_cs = filter(lambda cs: not cs.tag in skip_tags, target_cs)
     target_cs = list(target_cs)
     if len(target_cs) == 0:
@@ -89,6 +124,13 @@ def eliminar(*target_cs, options={}, flags=[],
 # --------------------------------------------------------------------
 @target_containers(cmd_logger) 
 def term(*target_cs, options={}, flags=[]):
+    """Abre la terminal los contenedores que se enceuntren en 
+    target_cs
+
+    Args:
+        options (dict, optional): Opciones del comando term
+        flags (list, optional): Flags introducidos en el programa
+    """
     # Arrancamos los contenedores validos
     cs_s = concat_array(target_cs)
     msg = f" Abriendo terminales de contenedores '{cs_s}'..."
@@ -97,44 +139,22 @@ def term(*target_cs, options={}, flags=[]):
     cs_s = concat_array(succesful_cs)
     msg = f" Se ha abierto la terminal de los contenedores '{cs_s}'\n"
     cmd_logger.info(msg)
-# --------------------------------------------------------------------
-def crear(numServs, options={}, flags=[]):
-    if register.load(bridges.ID) != None:
-        msg = (" La plataforma de servidores ya ha sido desplegada, " 
-              + "se debe destruir la anterior para crear otra nueva")
-        cmd_logger.error(msg)
-        return   
-    cmd_logger.info(" Desplegando la plataforma de servidores...\n")
-    # Creando bridges
-    bgs = machines.serialize_bridges(numBridges=2)
-    bgs_s = concat_array(bgs)
-    cmd_logger.debug(f" Nombre de bridges serializado --> '{bgs_s}'")
-    cmd_logger.info(" Creando bridges...")
-    succesful_bgs = bridges.init(*bgs)
-    if not "-q" in flags:
-        program.lxc_network_list()
-    bgs_s = concat_array(succesful_bgs)
-    cmd_logger.info(f" Bridges '{bgs_s}' creados\n")
-    # Creando contenedores
-        # Elegimos la imagen con la que se van a crear
-    lbimage = machines.default_image
-    climage = machines.default_image
-    if "--image" in options:
-        climage = options["--image"][0]
-        lbimage = options["--image"][0]
-    if "--climage" in options:
-        climage = options["--climage"][0]
-    if "--lbimage" in options:
-        lbimage = options["--lbimage"][0]
-    cmd_logger.debug(f" Creando cliente con imagen '{climage}'")
-    cmd_logger.debug(f" Creando lb con imagen '{lbimage}'")
-    lb = machines.get_loadbalancer(image=lbimage)
-    cl = machines.get_clients(image=climage)
-    añadir(numServs, options=options, flags=flags, extra_cs=[lb,cl]) 
-    cmd_logger.info(" Plataforma de servidores desplegada")
+    
+    # --------------------------------------------------------------------
+def añadir(numServs:int, options={}, flags=[], extra_cs=[]):
+    """Añade el numero de contenedores especificados a la plataforma
+    de servidores. Por defecto solo añade contenedores que sean del
+    tipo servidor, pero en extra_cs se pueden especificar contenedores 
+    de cualquier tipo que tambien se quiran añadir
 
-# --------------------------------------------------------------------
-def añadir(numServs, options={}, flags=[] , extra_cs=[]):
+    Args:
+        numServs (int): Numero de servidores a añadir
+        options (dict, optional): Opciones del comando añadir
+        flags (list, optional): Flags introducidos en el programa
+        extra_cs (list, optional): Variable utilizada para que 'crear' se
+            pueda comunicar con esta funcion y tambien cree los 
+            clientes y el balanceador, ademas de los servidores
+    """
     if register.load(bridges.ID) == None:
         msg = (" La plataforma de servidores no ha sido " +
                     "desplegada, se debe crear una nueva antes " +
@@ -197,7 +217,61 @@ def añadir(numServs, options={}, flags=[] , extra_cs=[]):
             arrancar(*c_names, flags=flags) 
                  
 # --------------------------------------------------------------------
+def crear(numServs:int, options={}, flags=[]):
+    """Crea la plataforma del sistema-servidor, desplegando los 
+    bridges y contenedores y conectandolos entre ellos (de la forma
+    que se hayan definido estas conexiones en la carpeta program)
+
+    Args:
+        numServs (int): Numero de servidores a crear
+        options (dict, optional): Opciones del comando crear
+        flags (list, optional): Flags introducidos en el programa
+    """
+    if register.load(bridges.ID) != None:
+        msg = (" La plataforma de servidores ya ha sido desplegada, " 
+              + "se debe destruir la anterior para crear otra nueva")
+        cmd_logger.error(msg)
+        return   
+    cmd_logger.info(" Desplegando la plataforma de servidores...\n")
+    # Creando bridges
+    bgs = machines.serialize_bridges(numBridges=2)
+    bgs_s = concat_array(bgs)
+    cmd_logger.debug(f" Nombre de bridges serializado --> '{bgs_s}'")
+    cmd_logger.info(" Creando bridges...")
+    succesful_bgs = bridges.init(*bgs)
+    if not "-q" in flags:
+        program.lxc_network_list()
+    bgs_s = concat_array(succesful_bgs)
+    cmd_logger.info(f" Bridges '{bgs_s}' creados\n")
+    # Creando contenedores
+        # Elegimos la imagen con la que se van a crear
+    lbimage = machines.default_image
+    climage = machines.default_image
+    if "--image" in options:
+        climage = options["--image"][0]
+        lbimage = options["--image"][0]
+    if "--climage" in options:
+        climage = options["--climage"][0]
+    if "--lbimage" in options:
+        lbimage = options["--lbimage"][0]
+    cmd_logger.debug(f" Creando cliente con imagen '{climage}'")
+    cmd_logger.debug(f" Creando lb con imagen '{lbimage}'")
+    lb = machines.get_loadbalancer(image=lbimage)
+    cl = machines.get_clients(image=climage)
+    añadir(numServs, options=options, flags=flags, extra_cs=[lb,cl]) 
+    cmd_logger.info(" Plataforma de servidores desplegada")
+
+# --------------------------------------------------------------------
 def destruir(options={}, flags=[]):
+    """Destruye la platafrma del sistema-servidor eliminando todos
+    sus componenetes (bridges, contenedores y las conexiones entre
+    ellos). Reutiliza el codigo de la funcion eliminar para eliminar
+    los contenedores.
+
+    Args:
+        options (dict, optional): Opciones del comando destruir
+        flags (list, optional): Flags introducidos en el programa
+    """
     if not "-f" in flags:
         msg = ("Se borrara por completo la infraestructura " + 
                 "creada, contenedores, bridges y sus conexiones " + 
@@ -245,7 +319,14 @@ def destruir(options={}, flags=[]):
         cmd_logger.error(msg)
             
 # --------------------------------------------------------------------   
-def show(choice, options={}, flags={}):
+def show(choice:str, options={}, flags={}):
+    """Muestra informacion sobre el programa
+
+    Args:
+        choice (str): Indica que informacion se quiere mostrar
+        options (dict, optional): Opciones del comando show
+        flags (list, optional): Flags introducidos en el programa
+    """
     if choice == "diagram":
         program.show_diagram()
     elif choice == "state":

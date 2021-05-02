@@ -17,8 +17,9 @@ from program.functions import ProgramError
 # Este es un fichero fachada en el cual se ve de forma global el 
 # flujo de ejecucion que sigue el programa sin entrar en detalles
 # --------------------------------------------------------------------
-# Los criterios de nivel de logger que se van a seguir son:
-# - logger.warning():
+# Los criterios de nivel de logger que va a seguir el programa son:
+# --> Se usara:
+# - logger.warning()
 # cuando se necesite informar al usuario de algo importante
 # - logger.error():
 # cuando alguna accion no se haya podido completar por algun motivo
@@ -36,7 +37,7 @@ def main():
         args_processed = cli.process_cmdline(sys.argv)
         if args_processed == None: return
         # Configuramos la cantidad de info que se va a mostrar
-        bash.config_verbosity(args_processed["flags"])
+        config_verbosity(args_processed["flags"])
         # Realizamos unas comprobaciones previas (ProgramError)
         program.check_enviroment()
         program.check_updates()
@@ -60,6 +61,28 @@ def main():
     else:
         main_logger.info(" Programa finalizado")
         
+# --------------------------------------------------------------------
+def config_verbosity(flags:list):
+    """Configura el nivel de verbosidad del programa (nivel de los
+    logger de los diferentes ficheros que conforman el programa) en
+    funcion de los flags que haya pasado el usuario en la linea de 
+    comandos
+
+    Args:
+        flags (list): Flags que se han pasado en la linea de comandos
+    """
+    if "-d" in flags:
+        logLvl = logging.DEBUG
+    elif "-v" in flags:
+        logLvl = logging.INFO
+    elif "-q" in flags:
+        logLvl = logging.ERROR
+    else:
+        logLvl = logging.WARNING
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logLvl) 
+
+# --------------------------------------------------------------------
 if __name__ == "__main__":
     main()
 # --------------------------------------------------------------------

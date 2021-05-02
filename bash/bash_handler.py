@@ -6,15 +6,24 @@ from dependencies.cli.cli import Cli, CmdLineError
 from dependencies.cli.aux_classes import Command, Flag
 from dependencies.utils.decorators import timer
 
-# ----------------------------BASH HANDLER----------------------------
+# --------------------------- BASH HANDLER ---------------------------
 # --------------------------------------------------------------------
-# Define como se va a leer la linea de comandos y ejecuta las ordenes
+# Define todos los comandos que va a tener el programa y ejecuta las
+# ordenes que introduzca el usuario por terminal
+# --------------------------------------------------------------------
 
+# En este diccionario se asocia a cada comando una funcion a ejecutar
 commands = {}
 # --------------------------------------------------------------------
 @timer
-def execute(args:list):
-    """Executes the commands of the program'"""
+def execute(args:dict()):
+    """Ejecuta la funcion correspondiente al comando introducido por 
+    el usuario
+
+    Args:
+        args (dict): Linea de comandos introducida por el usuario 
+            ya validada, es decir, debe ser correcta
+    """
     for cmd_name, cmd in commands.items():
         if cmd_name in args["cmd"]:
             principal = args.pop("cmd").pop(cmd_name)
@@ -24,6 +33,13 @@ def execute(args:list):
         
 # --------------------------------------------------------------------
 def config_cli() -> Cli:
+    """Se definen todos los argumentos que podra recibir el programa 
+    (se asocia cada comando principal con una funcion y se almacena 
+    en commands) y se configura la command line interface (cli)
+
+    Returns:
+        Cli: Devuelve la cli configurada con los comandos del programa
+    """
     global commands
     cli = Cli()
     # Arguments
@@ -143,18 +159,4 @@ def config_cli() -> Cli:
     launch = Flag("-l", description=msg)
     cli.add_flag(launch)
     return cli
-
-# --------------------------------------------------------------------
-def config_verbosity(flags:list):
-    if "-d" in flags:
-        logLvl = logging.DEBUG
-    elif "-v" in flags:
-        logLvl = logging.INFO
-    elif "-q" in flags:
-        logLvl = logging.ERROR
-    else:
-        logLvl = logging.WARNING
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logLvl) 
-
 # --------------------------------------------------------------------

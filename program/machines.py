@@ -100,7 +100,7 @@ def process_names(num:int, *names) -> list:
     server_names = []
     j = 1
     machine_names = objectlist_as_dict(
-        containers.ID, 
+        register.load(containers.ID), 
         key_attribute="name"
     )
     if machine_names == None:

@@ -126,9 +126,9 @@ def show_diagram():
             program_logger.error(err)
         
 def show_files_structure():
-    """Muestra la estructura de ficheros utilizada para este proyecto y
-    sus conexiones. Tambien muestra las dependencias externas a las que
-    esta ligado"""
+    """Muestra la estructura de ficheros utilizada para este proyecto
+    y sus relaciones. Tambien muestra las dependencias externas a las
+    que esta ligado"""
     try:
         path = "program/resources/images/files_structure.png"
         subprocess.Popen(
@@ -151,8 +151,7 @@ def check_enviroment():
     """Revisa que todas las dependencias externas que necesita el 
     programa se encuentran disponibles en el PC donde se esta
     ejecutando y en caso contrario lanza un error si la dependencia 
-    es obligatoria o un warning si es opcional. Estas advertencias 
-    son las unicas de este fichero que se han dejado en ingles 
+    es obligatoria o un warning si es opcional. 
 
     Raises:
         ProgramError: Si el SO que se esta usando no es Linux
@@ -161,7 +160,8 @@ def check_enviroment():
     system = platform.system()
     program_logger.debug(f" {system} OS detected")
     if system != "Linux":
-        err = f" This program only works on Linux -> {system} OS detected"
+        err = (" Este programa solo funciona en " + 
+                            f"Linux -> '{system}' detectado")
         raise ProgramError(err)
     try:
         subprocess.run(
@@ -171,9 +171,10 @@ def check_enviroment():
         )
         subprocess.run(["lxd", "init", "--auto"])
     except:
-        err = (" 'lxd' is not installed in this computer and it's necessary " +
-               "for the execution of this program.\nEnter 'sudo apt " +
-               "install lxd' in the commands terminal for installing it.")
+        err = (" 'lxd' no esta instalado en este ordenador y es " +
+               "necesario para la ejecucion de este programa. " +
+               "\nIntroduce 'sudo apt install lxd' en la consola " + 
+               "de comandos para instalarlo.")
         raise ProgramError(err)
     try:
         subprocess.run(
@@ -182,9 +183,10 @@ def check_enviroment():
             stdout=subprocess.PIPE
         )
     except:
-        warn = (" 'xterm' is not installed in this computer, and some " +
-              "functionalities may require this module, please enter " +
-              "'sudo apt install xterm' for installing it")
+        warn = (" 'xterm' no esta instalado en este ordenador, " +
+              "y algunas funcionalidades pueden requerir este " +
+              "modulo. Introduce 'sudo apt install xterm' " + 
+              "para instalarlo")
         program_logger.warning(warn)
     try:
         subprocess.run(
@@ -193,9 +195,10 @@ def check_enviroment():
             stdout=subprocess.PIPE
         )
     except:
-        warn = (" 'imagemagick' is not installed in this computer, and some " +
-              "functionalities may require this module, please enter " +
-              "'sudo apt install imagemagick' for installing it")
+        warn = (" 'imagemagick' no esta instalado en este ordenador, " +
+              "y algunas funcionalidades pueden requerir este modulo. " +
+              "Introduce 'sudo apt install imagemagick' " + 
+              "para instalarlo")
         program_logger.warning(warn)
 
 
