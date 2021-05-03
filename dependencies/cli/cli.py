@@ -31,7 +31,6 @@ class Cli:
         """
         self.flags[flag.name] = flag
         
-# --------------------------------------------------------------------   
     def process_cmdline(self, args:list) -> dict:
         """Procesa los argumentos que se pasan como parametro. Informa 
         de si estos son validos o no en base a los comandos y flags 
@@ -87,8 +86,7 @@ class Cli:
                 processed_line["flags"] = inFlags
                 return processed_line
         raise CmdLineError(f"El comando '{args[0]}' no se reconoce")
-    
-# --------------------------------------------------------------------   
+      
     @staticmethod
     def check_command(cmd:Command, params:list) -> list:
         """Revisa si los parametro que se han pasado a un comando 
@@ -145,7 +143,6 @@ class Cli:
             err_msg = f"El comando '{cmd.name}' requiere un parametro extra"
             raise CmdLineError(err_msg)
         
-# --------------------------------------------------------------------   
     def check_flags(self, args:list) -> list:
         """Revisa que los flags que se han proporcionado son 
         compatibles entre si
@@ -179,8 +176,7 @@ class Cli:
         # entero (ya no nos hace falta)
         inFlags = list(map(lambda flag: str(flag), inFlags))
         return inFlags
-    
-# --------------------------------------------------------------------     
+      
     def printHelp(self):
         """Imprime las descripciones de cada comando y flag de la cli
         de forma estructurada"""
@@ -202,7 +198,6 @@ class Cli:
                 print(f"    -> {flag.name}")
 
 # -------------------------------------------------------------------- 
-# 
 class CmdLineError(Exception):
     """Excepcion personalizada para los errores de la cli"""
     def __init__(self, msg:str, _help=True):
@@ -210,4 +205,5 @@ class CmdLineError(Exception):
         if _help: 
             msg += hlpm
         super().__init__(msg)
+# --------------------------------------------------------------------
         

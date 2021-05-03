@@ -149,9 +149,9 @@ def show_files_structure():
 # --------------------------------------------------------------------   
 def check_enviroment():
     """Revisa que todas las dependencias externas que necesita el 
-    programa se encuentran disponibles en el PC donde se esta
-    ejecutando y en caso contrario lanza un error si la dependencia 
-    es obligatoria o un warning si es opcional. 
+    programa se encuentran disponibles en el PC y en caso contrario 
+    lanza un error si la dependencia es obligatoria o un warning si
+    es opcional. 
 
     Raises:
         ProgramError: Si el SO que se esta usando no es Linux

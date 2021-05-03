@@ -7,7 +7,6 @@ import dependencies.register.register as register
 from dependencies.utils.tools import objectlist_as_dict, remove_many
 
 
-# --------------------------------------------------------------------
 def target_containers(logger:Logger=None):
     """Decorador que permite reutilizar el codigo de algunos comandos.
     Comprueba que haya contenedores creados y despues devuelve los 

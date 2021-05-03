@@ -16,7 +16,7 @@ from dependencies.utils.decorators import timer
 commands = {}
 # --------------------------------------------------------------------
 @timer
-def execute(args:dict()):
+def execute(args:dict):
     """Ejecuta la funcion correspondiente al comando introducido por 
     el usuario
 
@@ -38,7 +38,7 @@ def config_cli() -> Cli:
     en commands) y se configura la command line interface (cli)
 
     Returns:
-        Cli: Devuelve la cli configurada con los comandos del programa
+       Cli: Devuelve la cli configurada con los comandos del programa
     """
     global commands
     cli = Cli()

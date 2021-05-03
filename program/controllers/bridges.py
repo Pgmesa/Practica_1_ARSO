@@ -45,7 +45,7 @@ def attach(cs_name:str, to_bridge:Bridge):
     msg = f" Agregando '{cs_name}' al bridge {bridge.name}..."
     bgs_logger.info(msg)
     try:
-        bridge.add_vm(cs_name)
+        bridge.add_container(cs_name)
         bgs_logger.info(f" '{cs_name}' agregado con exito")
     except LxcNetworkError as err:
         bgs_logger.error(err)
