@@ -3,14 +3,21 @@ import os
 import pickle
 from contextlib import suppress
 
-# -------------------------------------------------------------------- 
-class RegisterError(Exception):
-    def __init__(self, msg):
-        super().__init__(msg)
+# --------------------------- REGISTER  ------------------------------
+# --------------------------------------------------------------------
+# Modulo que proporciona funciones para almacenar objetos en forma
+# binaria. Se crea un fichero registro el cual contiene un diccionario
+# con tantas paginas como informacion se quiera guardar. En cada 
+# pagina, identificada con una clave (register_id) se encuentra la
+# informacion relacionada que se quiera guardar junta (una lista con 
+# objetos, otro diccionario u objetos o valores aislados). Es una 
+# forma de centralizar y facilitar la serializacion de objetos 
+# (guardar objetos de forma binaria y ordenada en un mismo fichero)
+# --------------------------------------------------------------------
 
-# --------------------------------------------------------------------         
+        
 REL_PATH = ".register"
-    
+# -------------------------------------------------------------------- 
 def config_location(path, name=".register"):
     global REL_PATH
     REL_PATH = path+name
@@ -103,4 +110,9 @@ def remove(register_id=None):
             os.remove(REL_PATH)
 
 # -------------------------------------------------------------------- 
+class RegisterError(Exception):
+    """Error personalizado para los fallos del registro"""
+    def __init__(self, msg):
+        super().__init__(msg)
 
+# -------------------------------------------------------------------- 

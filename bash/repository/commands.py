@@ -181,13 +181,13 @@ def añadir(numServs:int, options={}, flags=[], extra_cs=[]):
     cmd_logger.debug(f" Creando servidores con imagen '{simage}'")
     if "--name" in options:   
         names = options["--name"]
-        cs = extra_cs + machines.serialize_servers(
+        cs = extra_cs + machines.get_servers(
             numServs, 
             *names, 
             image=simage
         )
     else:
-        cs = extra_cs + machines.serialize_servers(
+        cs = extra_cs + machines.get_servers(
             numServs,
             image=simage
         )
@@ -234,7 +234,7 @@ def crear(numServs:int, options={}, flags=[]):
         return   
     cmd_logger.info(" Desplegando la plataforma de servidores...\n")
     # Creando bridges
-    bgs = machines.serialize_bridges(numBridges=2)
+    bgs = machines.get_bridges(numBridges=2)
     bgs_s = concat_array(bgs)
     cmd_logger.debug(f" Nombre de bridges serializado --> '{bgs_s}'")
     cmd_logger.info(" Creando bridges...")

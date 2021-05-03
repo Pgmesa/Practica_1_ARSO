@@ -42,7 +42,7 @@ def get_clients(image:str()=default_image) -> Container:
     """
     return Container("cl", image, tag=CLIENT)
 
-def serialize_servers(num:int(), *names, image:str()=default_image) -> list:
+def get_servers(num:int(), *names, image:str()=default_image) -> list:
     """Devuelve los objetos de los servidores que se vayan a crear 
     configurados
 
@@ -61,7 +61,7 @@ def serialize_servers(num:int(), *names, image:str()=default_image) -> list:
         servs.append(Container(name, image, tag=SERVER))
     return servs
 
-def serialize_bridges(numBridges:int) -> list:
+def get_bridges(numBridges:int) -> list:
     """Devuelve los objetos de los bridges que se vayan a crear 
     configurados
 

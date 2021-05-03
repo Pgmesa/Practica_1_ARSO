@@ -2,9 +2,12 @@
 from .aux_classes import Command, Flag
 
 
-# ---------------------- Command Line Interface ----------------------
-# -------------------------------------------------------------------- 
 class Cli:
+    """Interfaz que se encarga de controlar que la linea de comandos
+    introducida en un programa es correcta, (mira que todos los flags y 
+    comandos introducidos por terminal son correctos y compatibles).
+    Hace falta una configuracion previa (definir que comandos y flags
+    que va a tener el programa y sus caracteristicas)"""
     def __init__(self):
         self.commands = {}
         self.flags = {"-h": Flag(
@@ -13,13 +16,40 @@ class Cli:
         )}
         
     def add_command(self, command:Command):
+        """Añade un nuevo comando 
+
+        Args:
+            command (Command): Comando a añadir
+        """
         self.commands[command.name] = command 
     
     def add_flag(self, flag:Flag):
+        """Añade un nuevo Flag
+
+        Args:
+            flag (Flag): Flag a añadir
+        """
         self.flags[flag.name] = flag
         
 # --------------------------------------------------------------------   
-    def process_cmdline(self, args:list) -> list:
+    def process_cmdline(self, args:list) -> dict:
+        """Procesa los argumentos que se pasan como parametro. Informa 
+        de si estos son validos o no en base a los comandos y flags 
+        que conformen la cli.
+
+        Args:
+            args (list): Linea de comandos a procesar
+
+        Raises:
+            CmdLineError: Si no se han proporcionado argumentos
+            CmdLineError: Si el comando no es correcto
+
+        Returns:
+            dict: diccionario con el comando, las opciones del comando
+                y los flags como claves y los parametros que se les 
+                hayan pasado como valores (si esque se les ha pasado
+                alguno)
+        """
         args.pop(0) # Eliminamos el nombre del programa
         if "-h" in args: 
             self.printHelp()
@@ -44,14 +74,14 @@ class Cli:
                 # Vemos si cada parte es válida y la guardamos en 
                 # un diccionario
                 processed_line = {"cmd": {}, "options": {}, "flags": []}
-                for cmd_name, part in parts.items():
+                for cmd_name, params in parts.items():
                     try:
                         command = cmd.options[cmd_name]
                         key = "options"
                     except KeyError:
                         command = cmd
                         key = "cmd"
-                    checked_cmd = self.check_command(command, part)
+                    checked_cmd = self.check_command(command, params)
                     dict_page = {command.name: checked_cmd}
                     processed_line[key] = dict_page
                 processed_line["flags"] = inFlags
@@ -60,34 +90,52 @@ class Cli:
     
 # --------------------------------------------------------------------   
     @staticmethod
-    def check_command(cmd, args):
-        if len(args) > 0:
-            if len(args) > 1 and not cmd.multi: 
+    def check_command(cmd:Command, params:list) -> list:
+        """Revisa si los parametro que se han pasado a un comando 
+        (puede ser una opcion de un comando) son validos o si no se 
+        le han pasado parametros y el comando los requeria.
+        
+
+        Args:
+            cmd (Command): Comando a procesar
+            params (list): parametros que se le han pasado al comando
+
+        Raises:
+            CmdLineError: Si los parametros no son validos para el
+                comando
+
+        Returns:
+            list: lista con los parametros del comando procesados. Si 
+                se han proporcionado numeros en los parametros los 
+                devuelve como int y no como str
+        """
+        if len(params) > 0:
+            if len(params) > 1 and not cmd.multi: 
                 err_msg = ("No se permite mas de 1 opcion extra " +
                           f"en el comando '{cmd.name}'. Comandos " +
-                          f"incorrectos -> {args[1:]}")
+                          f"incorrectos -> {params[1:]}")
                 raise CmdLineError(err_msg)
             if cmd.extra_arg:
                 extra_args = []
-                for extra in args:
+                for extra in params:
                     try:
                         extra_args.append(int(extra))
                     except:
                         extra_args.append(extra)
                 if cmd.choices == None:
                     return extra_args
-                #Todos los extra args deben estar en choices
+                # Todos los extra args deben estar en choices
                 for extra in extra_args:
                     if extra not in cmd.choices:
                         break
-                #Si completa el bucle es que todos son validos
+                # Si completa el bucle es que todos son validos
                 else:
                     return extra_args
-                err_msg = f"El parametro extra '{args[0]}' no es valido"
+                err_msg = f"El parametro extra '{params[0]}' no es valido"
                 raise CmdLineError(err_msg)
             else:
                 err_msg = (f"El comando '{cmd.name}' no admite " + 
-                                            f"parametros extra {args}")
+                                            f"parametros extra {params}")
                 raise CmdLineError(err_msg)
         elif not cmd.default == None:
             return [cmd.default]
@@ -98,7 +146,20 @@ class Cli:
             raise CmdLineError(err_msg)
         
 # --------------------------------------------------------------------   
-    def check_flags(self, args):
+    def check_flags(self, args:list) -> list:
+        """Revisa que los flags que se han proporcionado son 
+        compatibles entre si
+
+        Args:
+            args (list): Linea de comandos a procesar
+
+        Raises:
+            CmdLineError: Si los comandos no son compatibles
+
+        Returns:
+            list: lista con los flags que habia en la linea de 
+                de comandos proporcionada (args)
+        """
         inFlags = []
         for arg in args:
             for validFlag in self.flags.values():
@@ -121,6 +182,8 @@ class Cli:
     
 # --------------------------------------------------------------------     
     def printHelp(self):
+        """Imprime las descripciones de cada comando y flag de la cli
+        de forma estructurada"""
         print(" python3 __main__ [commands] <parameters> " + 
                                     "[options] <parameters> [flags]")
         print(" + Commands: ")
@@ -139,7 +202,9 @@ class Cli:
                 print(f"    -> {flag.name}")
 
 # -------------------------------------------------------------------- 
+# 
 class CmdLineError(Exception):
+    """Excepcion personalizada para los errores de la cli"""
     def __init__(self, msg:str, _help=True):
         hlpm = "\nIntroduce el parametro -h para acceder a la ayuda"
         if _help: 
