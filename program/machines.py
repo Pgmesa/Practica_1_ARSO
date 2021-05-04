@@ -16,9 +16,9 @@ from dependencies.utils.tools import objectlist_as_dict
 # Tags permitidos para los contenedores de este programa
 SERVER = "server"; LB = "load balancer"; CLIENT  = "client"
 # Imagen por defecto con la que se van a crear los contenedores
-default_image = "ubuntu:18.04"
+_default_image = "ubuntu:18.04"
 # --------------------------------------------------------------------
-def get_loadbalancer(image:str=default_image) -> Container:
+def get_loadbalancer(image:str=_default_image) -> Container:
     """Devuelve el objeto del LB configurado
 
     Args:
@@ -30,7 +30,7 @@ def get_loadbalancer(image:str=default_image) -> Container:
     """
     return Container("lb", image, tag=LB)
 
-def get_clients(image:str()=default_image) -> Container:
+def get_clients(image:str()=_default_image) -> Container:
     """Devuelve el objeto del cliente configurado
 
     Args:
@@ -42,7 +42,7 @@ def get_clients(image:str()=default_image) -> Container:
     """
     return Container("cl", image, tag=CLIENT)
 
-def get_servers(num:int(), *names, image:str()=default_image) -> list:
+def get_servers(num:int(), *names, image:str()=_default_image) -> list:
     """Devuelve los objetos de los servidores que se vayan a crear 
     configurados
 
