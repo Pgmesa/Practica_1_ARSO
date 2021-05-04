@@ -47,7 +47,7 @@ def get_servers(num:int(), *names, image:str()=default_image) -> list:
     configurados
 
     Args:
-        num (int): Numero de servidores a crear
+        num (int): numero de servidores a crear
         image (str, optional): imagen del contenedor a usar.
             Por defecto se utiliza la especificada en default_image.
         names: nombres proporcionados para los servidores
@@ -56,7 +56,7 @@ def get_servers(num:int(), *names, image:str()=default_image) -> list:
         list: lista de objetos de tipo Contenedor (servidores)
     """
     servs = []
-    server_names = process_names(num, *names)
+    server_names = _process_names(num, *names)
     for name in server_names:
         servs.append(Container(name, image, tag=SERVER))
     return servs
@@ -82,7 +82,7 @@ def get_bridges(numBridges:int) -> list:
         bgs.append(b)
     return bgs
 
-def process_names(num:int, *names) -> list:
+def _process_names(num:int, *names) -> list:
     """Se encarga de proporcionar una lista con nombres validos 
     para los contenedores que se vayan a crear. Mira en el registro
     los nombres existentes y crea otros nuevos no utilizados de la

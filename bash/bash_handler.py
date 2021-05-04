@@ -13,7 +13,7 @@ from dependencies.utils.decorators import timer
 # --------------------------------------------------------------------
 
 # En este diccionario se asocia a cada comando una funcion a ejecutar
-commands = {}
+_commands = {}
 # --------------------------------------------------------------------
 @timer
 def execute(args:dict):
@@ -24,7 +24,7 @@ def execute(args:dict):
         args (dict): Linea de comandos introducida por el usuario 
             ya validada, es decir, debe ser correcta
     """
-    for cmd_name, cmd in commands.items():
+    for cmd_name, cmd in _commands.items():
         if cmd_name in args["cmd"]:
             principal = args.pop("cmd").pop(cmd_name)
             secundary = args
@@ -40,7 +40,7 @@ def config_cli() -> Cli:
     Returns:
        Cli: Devuelve la cli configurada con los comandos del programa
     """
-    global commands
+    global _commands
     cli = Cli()
     # Arguments
     cmd_name = "crear"
@@ -68,27 +68,27 @@ def config_cli() -> Cli:
     msg = "<alias or fingerprint> allows to specify the image of the client"
     crear.add_option("--lbimage", description=msg, extra_arg=True, mandatory=True)
     cli.add_command(crear)
-    commands[cmd_name] = commands_rep.crear
+    _commands[cmd_name] = commands_rep.crear
     
     cmd_name = "arrancar"
     msg = ("<void or container_names> runs the containers specified, " +
            "if void\n           all containers are runned")
     arrancar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
     cli.add_command(arrancar)
-    commands[cmd_name] = commands_rep.arrancar
+    _commands[cmd_name] = commands_rep.arrancar
     
     cmd_name = "parar"
     msg = ("<void or container_names> stops the containers currently " +
           "running,\n           if void all containers are stopped")
     parar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
     cli.add_command(parar)
-    commands[cmd_name] = commands_rep.parar
+    _commands[cmd_name] = commands_rep.parar
     
     cmd_name = "destruir"
     msg = ("deletes every component of the platform created")
     destruir = Command(cmd_name, description=msg)
     cli.add_command(destruir)
-    commands[cmd_name] = commands_rep.destruir
+    _commands[cmd_name] = commands_rep.destruir
     
     # Other functionalities
     cmd_name = "pausar"
@@ -96,7 +96,7 @@ def config_cli() -> Cli:
           "running,\n           if void all containers are stopped")
     pausar = Command(cmd_name, description=msg, extra_arg=True, multi=True)
     cli.add_command(pausar)
-    commands[cmd_name] = commands_rep.pausar
+    _commands[cmd_name] = commands_rep.pausar
 
     cmd_name = "añadir"
     msg = ("<integer between(1-5)> adds the number of servers specified " +
@@ -110,14 +110,14 @@ def config_cli() -> Cli:
     msg ="<alias or fingerprint> allows to specify the image of the servers"
     añadir.add_option("--simage", description=msg, extra_arg=True, mandatory=True)
     cli.add_command(añadir)
-    commands[cmd_name] = commands_rep.añadir
+    _commands[cmd_name] = commands_rep.añadir
     
     cmd_name = "eliminar"
     msg = ("<void or server_names> deletes the servers specified, if void " +
           "\n           all servers are deleted")
     eliminar = Command(cmd_name, description=msg, extra_arg=True,  multi=True)
     cli.add_command(eliminar)
-    commands[cmd_name] = commands_rep.eliminar
+    _commands[cmd_name] = commands_rep.eliminar
     
     cmd_name = "show"
     msg = ("<diagram, state or files> shows information about the program. " + 
@@ -129,14 +129,14 @@ def config_cli() -> Cli:
     show = Command(cmd_name, description=msg, extra_arg=True, 
                             mandatory=True, choices=["diagram", "state", "files"])
     cli.add_command(show)
-    commands[cmd_name] = commands_rep.show
+    _commands[cmd_name] = commands_rep.show
     
     cmd_name = "term"
     msg = ("<void or container_names> opens the terminal of the containers " + 
            "\n           specified or all of them if no name is given")
     term = Command(cmd_name, description=msg, extra_arg=True, multi=True)
     cli.add_command(term)
-    commands[cmd_name] = commands_rep.term
+    _commands[cmd_name] = commands_rep.term
     
     #Flags/Options
     msg = "shows information about every process that is being executed"

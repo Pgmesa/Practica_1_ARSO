@@ -32,7 +32,7 @@ class Bridge:
         self.ethernet = ethernet
         self.used_by = []
     
-    def run(self, cmd:list):
+    def _run(self, cmd:list):
         """Ejecuta un comando mediante subprocess y controla los 
         errores que puedan surgir. Espera a que termine el proceso
         (Llamada bloqueante)
@@ -65,7 +65,7 @@ class Bridge:
             "lxc", "network", "attach" ,
             self.name, cs_name, self.ethernet
         ]
-        self.run(cmd)
+        self._run(cmd)
         self.used_by.append(cs_name)
     
     def create(self):
@@ -74,12 +74,12 @@ class Bridge:
         defecto 'lxc init --auto'"""
         if not self.is_default:
             cmd = ["lxc", "network", "create", self.name]
-            self.run(cmd)   
-        _set = ["lxc", "network", "set", self.name] 
-        self.run(_set + ["ipv4.nat", self.ipv4_nat])
-        self.run(_set + ["ipv4.address", self.ipv4_addr])
-        self.run(_set + ["ipv6.nat", self.ipv6_nat])
-        self.run(_set + ["ipv6.address", self.ipv6_addr])
+            self._run(cmd)   
+        set_ = ["lxc", "network", "set", self.name] 
+        self._run(set_ + ["ipv4.nat", self.ipv4_nat])
+        self._run(set_ + ["ipv4.address", self.ipv4_addr])
+        self._run(set_ + ["ipv6.nat", self.ipv6_nat])
+        self._run(set_ + ["ipv6.address", self.ipv6_addr])
     
     def delete(self):
         """Elimina el bridge
@@ -91,11 +91,11 @@ class Bridge:
         if len(self.used_by) == 0:
             if not self.is_default:
                 cmd = ["lxc", "network", "delete", self.name]
-                self.run(cmd)
+                self._run(cmd)
             else:
-                _set = ["lxc", "network", "set", self.name]
-                self.run(_set + ["ipv4.nat", "false"])
-                self.run(_set + ["ipv4.address", "none"])
+                set_ = ["lxc", "network", "set", self.name]
+                self._run(set_ + ["ipv4.nat", "false"])
+                self._run(set_ + ["ipv4.address", "none"])
         else:
             err = (f" El bridge '{self.name}' esta siendo usado " +
                   f"por: {self.used_by} y no se puede eliminar")

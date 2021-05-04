@@ -17,7 +17,7 @@ from dependencies.utils.tools import pretty, objectlist_as_dict
 # --------------------------------------------------------------------
 # Este fichero se encarga de proporcionar funciones especificas del
 # programa. Define como se van a conectar los contenedores con 
-# los brisges (quien con quien), realiza comprobaciones de entorno y 
+# los bridges (quien con quien), realiza comprobaciones de entorno y 
 # muestra informacion del programa -> su estado, estructura, etc.
 # --------------------------------------------------------------------
 
@@ -330,7 +330,7 @@ def check_updates():
 # --------------------------------------------------------------------  
 def lxc_list():
     """Se encarga de mostrar la lista de contenedores de lxc, pero 
-    en caso de estar arrancados, como la iptarda un r ato en
+    en caso de estar arrancados, como la ip tarda un rato en
     aparecer, la funcion espera a que se haya cargado toda la
     informacion para mostrar la lista. Comprueba que todas las ips
     hayan aparecido"""
@@ -427,7 +427,7 @@ def lxclist_as_dict(string:str) -> dict:
                 start += line_length
                 end += line_length
             # Establecemos un criterio de devolucion de la
-            # informacion para que luego sea masfacil de acceder
+            # informacion para que luego sea mas facil de acceder
             # a esta en otras funciones
             if len(values) > 1:
                 while "" in values:

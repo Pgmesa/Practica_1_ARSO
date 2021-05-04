@@ -28,7 +28,7 @@ class Container:
         self.tag = tag
         self.networks = {}
         
-    def run(self, cmd:list):
+    def _run(self, cmd:list):
         """Ejecuta un comando mediante subprocess y controla los 
         errores que puedan surgir. Espera a que termine el proceso
         (Llamada bloqueante)
@@ -60,7 +60,7 @@ class Container:
         """
         cmd = ["lxc","config","device","set", self.name,
                                         eth, "ipv4.address", with_ip]
-        self.run(cmd)
+        self._run(cmd)
         self.networks[eth] = with_ip
 
     def open_terminal(self):
@@ -89,7 +89,7 @@ class Container:
             err = (f" {self.tag} '{self.name}' esta '{self.state}' " +
                                 "y no puede ser inicializado de nuevo")
             raise LxcError(err)
-        self.run(["lxc", "init", self.container_image, self.name])  
+        self._run(["lxc", "init", self.container_image, self.name])  
         self.state = STOPPED
         # Se limitan los recursos del contenedor 
         limits = {
@@ -99,7 +99,7 @@ class Container:
         }
         for l in limits: 
             with suppress(LxcError):
-                self.run(["lxc", "config", "set", self.name] + limits[l])
+                self._run(["lxc", "config", "set", self.name] + limits[l])
         
     def start(self):
         """Arranca el contenedor
@@ -115,7 +115,7 @@ class Container:
             err = (f" {self.tag} '{self.name}' esta " +
                         f"'{self.state}' y no puede ser arrancado")
             raise LxcError(err)
-        self.run(["lxc", "start", self.name])  
+        self._run(["lxc", "start", self.name])  
         self.state = RUNNING
         
     def stop(self):
@@ -132,7 +132,7 @@ class Container:
             err = (f" {self.tag} '{self.name}' esta " +
                         f"'{self.state}' y no puede ser detenido")
             raise LxcError()
-        self.run(["lxc", "stop", self.name, "--force"])  
+        self._run(["lxc", "stop", self.name, "--force"])  
         self.state = STOPPED
         
     def delete(self):
@@ -145,7 +145,7 @@ class Container:
             err = (f" {self.tag} '{self.name}' esta " +
                         f"'{self.state}' y no puede ser eliminado")
             raise LxcError(err)
-        self.run(["lxc", "delete", self.name])  
+        self._run(["lxc", "delete", self.name])  
         self.state = DELETED
     
     def pause(self):
@@ -162,7 +162,7 @@ class Container:
             err = (f" {self.tag} '{self.name}' esta " +
                         f"'{self.state}' y no puede ser pausado")
             raise LxcError(err)
-        self.run(["lxc", "pause", self.name])  
+        self._run(["lxc", "pause", self.name])  
         self.state = FROZEN
     
     def __str__(self):

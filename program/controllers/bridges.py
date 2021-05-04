@@ -22,7 +22,7 @@ def init(b:Bridge=None):
     bgs_logger.info(f" Creando bridge '{b.name}'...")
     b.create()
     bgs_logger.info(f" bridge '{b.name}' creado con exito")
-    add_bridge(b)
+    _add_bridge(b)
 
 # -------------------------------------------------------------------
 @catch_foreach(bgs_logger)
@@ -30,7 +30,7 @@ def delete(b:Bridge):
     bgs_logger.info(f" Eliminando bridge '{b.name}'...")
     b.delete()
     bgs_logger.info(f" bridge '{b.name}' eliminado con exito")
-    update_bridge(b, remove=True)
+    _update_bridge(b, remove=True)
 # -------------------------------------------------------------------
 
 # -------------------------------------------------------------------
@@ -49,10 +49,10 @@ def attach(cs_name:str, to_bridge:Bridge):
         bgs_logger.info(f" '{cs_name}' agregado con exito")
     except LxcNetworkError as err:
         bgs_logger.error(err)
-    update_bridge(bridge)
+    _update_bridge(bridge)
     
 # -------------------------------------------------------------------   
-def update_bridge(b_to_update:Bridge, remove=False):
+def _update_bridge(b_to_update:Bridge, remove=False):
     """Actualiza el objeto de un bridge en el registro
 
     Args:
@@ -76,7 +76,7 @@ def update_bridge(b_to_update:Bridge, remove=False):
             bgs.append(b_to_update)
         register.update(ID, bgs)
 
-def add_bridge(b_to_add:Bridge):
+def _add_bridge(b_to_add:Bridge):
     """Añade un bridge al registro
 
     Args:

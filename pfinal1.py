@@ -37,7 +37,7 @@ def main():
         args_processed = cli.process_cmdline(sys.argv)
         if args_processed == None: return
         # Configuramos la cantidad de info que se va a mostrar
-        config_verbosity(args_processed["flags"])
+        _config_verbosity(args_processed["flags"])
         # Realizamos unas comprobaciones previas (ProgramError)
         program.check_enviroment()
         program.check_updates()
@@ -62,7 +62,7 @@ def main():
         main_logger.info(" Programa finalizado")
         
 # --------------------------------------------------------------------
-def config_verbosity(flags:list):
+def _config_verbosity(flags:list):
     """Configura el nivel de verbosidad del programa (nivel de los
     logger de los diferentes ficheros que conforman el programa) en
     funcion de los flags que haya pasado el usuario en la linea de 

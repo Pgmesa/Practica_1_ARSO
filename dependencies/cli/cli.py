@@ -55,7 +55,7 @@ class Cli:
             return None
         # Miramos a ver si alguno de los flags validos esta en la 
         # linea de comandos introducida
-        inFlags = self.check_flags(args)
+        inFlags = self._check_flags(args)
         # Revisamos si alguno de los comandos validos esta en la 
         # linea de comandos introducida
         for cmd in self.commands.values():
@@ -80,7 +80,7 @@ class Cli:
                     except KeyError:
                         command = cmd
                         key = "cmd"
-                    checked_cmd = self.check_command(command, params)
+                    checked_cmd = self._check_command(command, params)
                     dict_page = {command.name: checked_cmd}
                     processed_line[key] = dict_page
                 processed_line["flags"] = inFlags
@@ -88,7 +88,7 @@ class Cli:
         raise CmdLineError(f"El comando '{args[0]}' no se reconoce")
       
     @staticmethod
-    def check_command(cmd:Command, params:list) -> list:
+    def _check_command(cmd:Command, params:list) -> list:
         """Revisa si los parametro que se han pasado a un comando 
         (puede ser una opcion de un comando) son validos o si no se 
         le han pasado parametros y el comando los requeria.
@@ -143,7 +143,7 @@ class Cli:
             err_msg = f"El comando '{cmd.name}' requiere un parametro extra"
             raise CmdLineError(err_msg)
         
-    def check_flags(self, args:list) -> list:
+    def _check_flags(self, args:list) -> list:
         """Revisa que los flags que se han proporcionado son 
         compatibles entre si
 

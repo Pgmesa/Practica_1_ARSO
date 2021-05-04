@@ -26,7 +26,7 @@ def init(c:Container=None):
     cs_logger.info(f" Inicializando {c.tag} '{c.name}'...")
     c.init()
     cs_logger.info(f" {c.tag} '{c.name}' inicializado con exito")
-    add_container(c)
+    _add_container(c)
     
 # --------------------------------------------------------------------
 @catch_foreach(cs_logger)
@@ -34,7 +34,7 @@ def start(c:Container):
     cs_logger.info(f" Arrancando {c.tag} '{c.name}'...")
     c.start()
     cs_logger.info(f" {c.tag} '{c.name}' arrancado con exito")
-    update_container(c)
+    _update_container(c)
         
 # --------------------------------------------------------------------
 @catch_foreach(cs_logger)
@@ -42,7 +42,7 @@ def pause(c:Container):
     cs_logger.info(f" Suspendiendo {c.tag} '{c.name}'...")
     c.pause()
     cs_logger.info(f" {c.tag} '{c.name}' suspendido con exito")
-    update_container(c)
+    _update_container(c)
         
 # --------------------------------------------------------------------
 @catch_foreach(cs_logger)
@@ -50,7 +50,7 @@ def stop(c:Container):
     cs_logger.info(f" Deteniendo {c.tag} '{c.name}'...")
     c.stop()
     cs_logger.info(f" {c.tag} '{c.name}' detenido con exito")
-    update_container(c)
+    _update_container(c)
 
 # --------------------------------------------------------------------
 @catch_foreach(cs_logger)
@@ -60,7 +60,7 @@ def delete(c:Container):
     cs_logger.info(f" Eliminando {c.tag} '{c.name}'...")
     c.delete()
     cs_logger.info(f" {c.tag} '{c.name}' eliminado con exito")
-    update_container(c, remove=True)
+    _update_container(c, remove=True)
 
 # --------------------------------------------------------------------
 @catch_foreach(cs_logger)
@@ -84,7 +84,7 @@ def connect(c:Container, with_ip:str, to_network:str):
         cs_logger.info(f" Conexion realizada con exito")
     except LxcError as err:
         cs_logger.error(err)
-    update_container(c)
+    _update_container(c)
 
 def configure_netfile(c:Container):
     """Genera el fichero de configuracion .yaml del contenedor y lo
@@ -145,10 +145,10 @@ def configure_netfile(c:Container):
     subprocess.call(["lxc","stop",c.name])
     cs_logger.info(f" Net del {c.tag} '{c.name}' configurada con exito")
     remove(file_location)
-    update_container(c)
+    _update_container(c)
     
 # --------------------------------------------------------------------    
-def update_container(c_to_update:Container, remove:bool=False):
+def _update_container(c_to_update:Container, remove:bool=False):
     """Actualiza el objeto de un contenedor en el registro
 
     Args:
@@ -172,7 +172,7 @@ def update_container(c_to_update:Container, remove:bool=False):
             cs.append(c_to_update)
         register.update(ID, cs)
 
-def add_container(c_to_add:Container):
+def _add_container(c_to_add:Container):
     """Añade un contenedor al registro
 
     Args:
