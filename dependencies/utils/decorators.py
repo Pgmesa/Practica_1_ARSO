@@ -43,7 +43,9 @@ def catch_foreach(logger:Logger=None):
                     func(a, **optionals)
                     successful.append(a)
                 except Exception as err:
-                    if logger == None:
+                    if str(err) == "":
+                        pass
+                    elif logger == None:
                         print(f"ERROR:{err}")  
                     else:
                         logger.error(err)    

@@ -20,16 +20,41 @@ bgs_logger = logging.getLogger(__name__)
 @catch_foreach(bgs_logger)
 def init(b:Bridge=None):
     bgs_logger.info(f" Creando bridge '{b.name}'...")
-    b.create()
-    bgs_logger.info(f" bridge '{b.name}' creado con exito")
+    try:
+        b.create()
+    except LxcNetworkError as err:
+        err_msg = str(err)
+        if "already exists" in err_msg:
+            warn_msg = (f" El bridge '{b.name}' ya existe, " + 
+                         "no hace falta crearlo")
+            bgs_logger.warning(warn_msg)
+            _add_bridge(b)
+            raise LxcNetworkError()
+        else:
+            raise LxcNetworkError(err_msg)
+    else:
+        bgs_logger.info(f" bridge '{b.name}' creado con exito")
     _add_bridge(b)
 
 # -------------------------------------------------------------------
 @catch_foreach(bgs_logger)
 def delete(b:Bridge):
     bgs_logger.info(f" Eliminando bridge '{b.name}'...")
-    b.delete()
-    bgs_logger.info(f" bridge '{b.name}' eliminado con exito")
+    try:
+        b.delete()
+    except LxcNetworkError as err:
+        err_msg = str(err)
+        if "The network is currently in use" in err_msg:
+            warn_msg = (f" El bridge '{b.name}' esta siendo usado " + 
+                         "fuera del programa, se eliminara de la " +
+                         "plataforma pero seguira existiendo")
+            bgs_logger.warning(warn_msg)
+            _update_bridge(b, remove=True)
+            raise LxcNetworkError()
+        else:
+            raise LxcNetworkError(err_msg)
+    else:
+        bgs_logger.info(f" bridge '{b.name}' eliminado con exito")
     _update_bridge(b, remove=True)
 # -------------------------------------------------------------------
 

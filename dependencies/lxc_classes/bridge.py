@@ -1,5 +1,5 @@
 import subprocess
-
+from contextlib import suppress
 
 class Bridge:
     """Clase envoltorio que permite controlar un bridge de lxc
@@ -20,7 +20,6 @@ class Bridge:
                  ipv4_nat:bool=False, ipv4_addr:str=None,
                  ipv6_nat:bool=False, ipv6_addr:str=None):
         self.name = str(name)
-        self.is_default = True if self.name == "lxdbr0" else False
         self.ipv4_nat = "true" if ipv4_nat == True else "false"
         self.ipv4_addr = ipv4_addr if ipv4_addr != None else "none"
         self.ipv6_nat = "true" if ipv6_nat == True else "false"
@@ -69,12 +68,19 @@ class Bridge:
         self.used_by.append(cs_name)
     
     def create(self):
-        """Crea y configura el bridge. Si el bridge es el default
-        (lxdbr0) no se crea puesto que este ya viene creado por
-        defecto 'lxc init --auto'"""
-        if not self.is_default:
-            cmd = ["lxc", "network", "create", self.name]
-            self._run(cmd)   
+        """Crea el bridge y si ya esta creado o se ha creado
+        con exito tambien lo configura"""
+        try:
+            self._run(["lxc", "network", "create", self.name])
+        except LxcNetworkError as err:
+            err_msg = str(err)
+            if "already exists" in err_msg:
+                self._configure_ips()
+            raise LxcNetworkError(err)
+        else:
+            self._configure_ips()
+                
+    def _configure_ips (self):
         set_ = ["lxc", "network", "set", self.name] 
         self._run(set_ + ["ipv4.nat", self.ipv4_nat])
         self._run(set_ + ["ipv4.address", self.ipv4_addr])
@@ -89,13 +95,8 @@ class Bridge:
                 algun contenedor
         """
         if len(self.used_by) == 0:
-            if not self.is_default:
-                cmd = ["lxc", "network", "delete", self.name]
-                self._run(cmd)
-            else:
-                set_ = ["lxc", "network", "set", self.name]
-                self._run(set_ + ["ipv4.nat", "false"])
-                self._run(set_ + ["ipv4.address", "none"])
+            cmd = ["lxc", "network", "delete", self.name]
+            self._run(cmd)
         else:
             err = (f" El bridge '{self.name}' esta siendo usado " +
                   f"por: {self.used_by} y no se puede eliminar")
