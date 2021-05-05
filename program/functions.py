@@ -160,7 +160,8 @@ def check_enviroment():
     system = platform.system()
     program_logger.debug(f" {system} OS detected")
     if system != "Linux":
-        err = f" This program only works on Linux -> {system} OS detected"
+        err = (" Este programa solo funciona sobre " + 
+                        f"Linux -> {system} detectado")
         raise ProgramError(err)
     try:
         subprocess.run(
@@ -170,10 +171,10 @@ def check_enviroment():
         )
         subprocess.run(["lxd", "init", "--auto"])
     except:
-        err = (" 'lxd' is not installed in this computer and it's " +
-               "necessary for the execution of this program.\nEnter " +
-               "'sudo apt install lxd' in the commands terminal for "
-               "installing it")
+        err = (" 'lxd' no esta instalado en este ordenador y es " +
+               "necesario para la ejecucion del programa.\nIntroduce " +
+               "'sudo apt install lxd' en la linea de comandos para "
+               "instalarlo")
         raise ProgramError(err)
     try:
         subprocess.run(
@@ -182,9 +183,10 @@ def check_enviroment():
             stdout=subprocess.PIPE
         )
     except:
-        warn = (" 'xterm' is not installed in this computer, and some " +
-              "functionalities may require this module, please enter " +
-              "'sudo apt install xterm' for installing it")
+        warn = (" 'xterm' no esta instalado en este ordenador y " +
+              "algunas funcionalidades pueden requerir este modulo. " + 
+              "Introduce 'sudo apt install xterm' en la linea de " + 
+              "comandos para instalarlo")
         program_logger.warning(warn)
     try:
         subprocess.run(
@@ -193,9 +195,10 @@ def check_enviroment():
             stdout=subprocess.PIPE
         )
     except:
-        warn = (" 'imagemagick' is not installed in this computer, and " +
-              "some functionalities may require this module, please enter " +
-              "'sudo apt install imagemagick' for installing it")
+        warn = (" 'imagemagick' no esta instalado en este ordenador y " +
+              "algunas funcionalidades pueden requerir este modulo. " + 
+              "Introduce 'sudo apt install imagemagick' en la linea de " + 
+              "comandos para instalarlo")
         program_logger.warning(warn)
 
 
