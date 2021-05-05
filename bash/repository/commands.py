@@ -72,7 +72,7 @@ def pausar(*target_cs, options={}, flags=[]):
         flags (list, optional): Flags introducidos en el programa
     """
     # Pausamos los contenedores validos
-    msg = f" Parando contenedores '{concat_array(target_cs)}'..."
+    msg = f" Pausando contenedores '{concat_array(target_cs)}'..."
     cmd_logger.info(msg)
     succesful_cs = containers.pause(*target_cs)
     if not "-q" in flags:

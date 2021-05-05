@@ -39,9 +39,9 @@ def start(c:Container):
 # --------------------------------------------------------------------
 @catch_foreach(cs_logger)
 def pause(c:Container):
-    cs_logger.info(f" Suspendiendo {c.tag} '{c.name}'...")
+    cs_logger.info(f" Pausando {c.tag} '{c.name}'...")
     c.pause()
-    cs_logger.info(f" {c.tag} '{c.name}' suspendido con exito")
+    cs_logger.info(f" {c.tag} '{c.name}' pausado con exito")
     _update_container(c)
         
 # --------------------------------------------------------------------
